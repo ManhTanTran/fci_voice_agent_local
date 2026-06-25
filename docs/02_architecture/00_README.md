@@ -20,7 +20,11 @@ Nguồn lõi: `_source/01_Kien_truc_He_thong_Voice_AI_Agent.docx.pdf` (v1.0, 17/
 
 ## 1. Bốn lớp xử lý (kiến trúc nội bộ)
 
-Pipeline tổng thể, theo trình tự thời gian một lượt hội thoại:
+Sơ đồ gốc của FCI (đầy đủ thành phần) — nguồn `_source/image.png`:
+
+![Sơ đồ kiến trúc tổng thể Voice AI Agent](../../_source/image.png)
+
+Pipeline tổng thể, theo trình tự thời gian một lượt hội thoại (rút gọn từ sơ đồ trên):
 
 ```mermaid
 graph TD
@@ -82,15 +86,17 @@ graph TD
 
 ---
 
-## 2. Đối chiếu tham chiếu ngoài (trục A — sẽ vỡ dần)
+## 2. Đối chiếu tham chiếu ngoài (trục A)
 
-Mục này liệt kê hướng đối chiếu, **chưa trích nguồn chi tiết** (để làm ở các layer chuyên sâu):
+✅ **Đã khảo sát có trích nguồn** → xem doc riêng: [`01_fpt_vs_sota.md`](01_fpt_vs_sota.md) (deep-research, 21 nguồn, kiểm chứng đối nghịch).
 
-- **Pipeline cascade vs speech-to-speech end-to-end** — kiến trúc nội bộ là *cascade* (ASR → LLM → TTS). Cần đối chiếu hướng *speech-to-speech* (model nghe-nói trực tiếp) đang nổi 2024-2026: ưu/nhược về latency, kiểm soát nghiệp vụ, guardrail.
-- **Khung open-source voice-agent** — đối chiếu cách các framework hội thoại realtime tổ chức VAD + interruption + tool-calling, để xem 4 lớp nội bộ map vào đâu.
-- **Guardrail framework** — đối chiếu cách làm input/output rails (vd NeMo Guardrails) với cơ chế rails + fake-tool trong doc nội bộ.
+Tóm tắt 3 kết luận chính:
 
-> Việc đào sâu + trích nguồn từng hướng để dành cho các layer 05/06/07. Layer này chỉ **đặt khung đối chiếu**.
+- **Cascade vs speech-to-speech:** hệ nội bộ là *cascade có guardrail tách lớp* → lựa chọn **chính thống**. Cascade mạnh về kiểm soát nghiệp vụ + tool-calling + guardrail, đánh đổi là cộng dồn latency. Chưa có benchmark sống sót cho thấy S2S (OpenAI Realtime/Gemini Live) thay được cascade cho nghiệp vụ tổng đài.
+- **Turn-interruption: open-source ĐÃ đi xa hơn.** Semantic turn-detection model nhỏ (0.5-1B, chạy CPU, inference 12-110ms): LiveKit turn-detector (Qwen2.5-0.5B), Pipecat Smart Turn, VAP. Vá thẳng đau #1 (LLM-7B hiện 76%/280ms).
+- **Tool-calling:** constrained decoding (XGrammar) chỉ vá lỗi **định dạng**, không vá *chọn sai tool*. Đo bằng **BFCL V4** (hỗ trợ cả prompt-based = "simulated tool-calling"). Guardrail tách lớp nội bộ ≈ NeMo Guardrails.
+
+> ⚠️ Rủi ro lớn nhất: **tiếng Việt chưa xác minh** cho mọi module turn-detection. Chi tiết + nguồn + 3 module add-on đề xuất ở [`01_fpt_vs_sota.md`](01_fpt_vs_sota.md).
 
 ---
 

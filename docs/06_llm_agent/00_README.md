@@ -11,4 +11,6 @@
 - Luồng phụ "sinh cú pháp tool riêng + sinh lại phản hồi" cải thiện accuracy bao nhiêu, đánh đổi latency bao nhiêu?
 - Đối chiếu kỹ thuật tool-calling SOTA (constrained decoding, function-calling fine-tune).
 
+**Lead từ khảo sát ([02.01 FPT-vs-SOTA](../02_architecture/01_fpt_vs_sota.md)):** đo bằng **BFCL V4** (AST matching, hỗ trợ cả prompt-based = đúng "simulated tool-calling") để phân tách lỗi *format* vs *chọn-sai-tool*. **Constrained decoding (XGrammar)** chỉ vá lỗi format (không vượt được lỗi chọn-sai-tool) → làm BFCL harness TRƯỚC để biết XGrammar có đáng không.
+
 **Tài liệu mẫu:** System Prompt template (Personality/Flow/Scenario/Guidelines/Tools) + `voice_agent_trace_samples.jsonl` → [`08_datasets`](../08_datasets/00_README.md).
