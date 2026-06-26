@@ -1,0 +1,43 @@
+[project]
+name = "fci-voice"
+version = "0.1.0"
+description = "Voice AI Agent lab (FPT FCI) — adapter mỏng trên nền Pipecat"
+readme = "README.md"
+requires-python = ">=3.10"
+# Base CỐ Ý tối thiểu: chỉ engine Pipecat để `uv sync` gần như chắc chắn thành công
+# trên arm64/GB10. Các extra nặng (silero, model STT/LLM/TTS) thêm sau khi probe
+# xác nhận cài được — xem experiments/01_pipecat_dgx_smoke/README.md.
+dependencies = [
+    "pipecat-ai",
+]
+
+[project.optional-dependencies]
+# exp02 — harness test thông luồng STT trên dataset tiếng Anh (cài khi cần)
+exp02 = [
+    "faster-whisper",   # STT chạy CPU (CTranslate2), không cần torch
+    "jiwer",            # tính WER
+    "datasets<3",       # tải LibriSpeech dummy (bản <3 decode flac qua soundfile)
+    "soundfile",        # backend decode audio
+]
+# exp03 — full loop: LLM nhỏ chạy GPU GB10 (torch cu130) + transformers
+exp03 = [
+    "torch",            # lấy từ index cu130 bên dưới (chạy native GB10 sm_121)
+    "transformers",
+    "accelerate",
+]
+
+# torch lấy từ index CUDA 13.0 (GB10) — KHÔNG lấy bản CPU mặc định PyPI
+[tool.uv.sources]
+torch = { index = "pytorch-cu130" }
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fci_voice"]

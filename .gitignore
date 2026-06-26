@@ -3,3 +3,5 @@ data/
 __pycache__/
 *.egg-info/
 .DS_Store
+# kết quả chạy exp (nặng — mirror Drive khi cần, không commit)
+experiments/**/results/

@@ -30,10 +30,11 @@ Lab **khảo sát + thử nghiệm** bài toán **Voice AI Agent** (trợ lý th
 ```
 _source/        Tài liệu gốc nội bộ FCI (2 PDF) — chỉ đọc
 present/        Slide đồng bộ team (Marp/markdown)
-docs/           Khảo sát layer-by-layer (đánh số, xem docs/00_INDEX.md)
-experiments/    Thí nghiệm có chọn lọc khi có máy
+docs/           Khảo sát layer-by-layer (01–09) + triển khai (10), xem docs/00_INDEX.md
+src/fci_voice/  Code tái dùng — adapter mỏng trên Pipecat (xem docs/10_implementation/01_architecture.md)
+experiments/    Thí nghiệm chạy được trên DGX (01 smoke · 02 STT · 03 full loop · 04 English latency)
 notebooks/      Notebook explore
 data/           Audio/trace mẫu + eval (gitignore, mirror Drive)
 ```
 
-Bắt đầu: đọc `docs/00_INDEX.md`.
+Bắt đầu: đọc `docs/00_INDEX.md`. Hiện trạng triển khai: `docs/10_implementation/`.
