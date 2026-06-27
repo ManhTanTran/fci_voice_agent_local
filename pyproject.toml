@@ -25,6 +25,11 @@ exp03 = [
     "transformers",
     "accelerate",
 ]
+# exp06 — structured/constrained decoding cho tool-calling (xgrammar, wheel aarch64)
+# Cài kèm exp03: uv sync --extra exp03 --extra exp06
+exp06 = [
+    "xgrammar",
+]
 
 # torch lấy từ index CUDA 13.0 (GB10) — KHÔNG lấy bản CPU mặc định PyPI
 [tool.uv.sources]

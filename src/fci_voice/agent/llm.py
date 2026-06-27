@@ -41,7 +41,25 @@ class TransformersLLM:
         self.device_str = f"{self.device}/{dtype}"
         return self
 
-    def chat(self, messages: list[dict], max_new_tokens: int = 96) -> LLMResult:
+    # Truy cập tokenizer/model cho structured decoding (xgrammar cần vocab + tokenizer).
+    @property
+    def tokenizer(self):
+        if self._tok is None:
+            self.load()
+        return self._tok
+
+    @property
+    def model(self):
+        if self._model is None:
+            self.load()
+        return self._model
+
+    def chat(
+        self,
+        messages: list[dict],
+        max_new_tokens: int = 96,
+        logits_processor=None,
+    ) -> LLMResult:
         import torch
 
         if self._model is None:
@@ -50,11 +68,12 @@ class TransformersLLM:
             messages, tokenize=False, add_generation_prompt=True
         )
         inputs = self._tok([prompt], return_tensors="pt").to(self.device)
+        gen_kw = dict(max_new_tokens=max_new_tokens, do_sample=False)
+        if logits_processor is not None:
+            gen_kw["logits_processor"] = logits_processor  # ép grammar khi có
         t0 = time.perf_counter()
         with torch.no_grad():
-            out = self._model.generate(
-                **inputs, max_new_tokens=max_new_tokens, do_sample=False
-            )
+            out = self._model.generate(**inputs, **gen_kw)
         gen = out[0][inputs.input_ids.shape[1] :]
         resp = self._tok.decode(gen, skip_special_tokens=True).strip()
         return LLMResult(text=resp, latency_s=time.perf_counter() - t0)
