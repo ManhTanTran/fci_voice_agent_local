@@ -1,0 +1,26 @@
+{
+  "id": "d5_hardship_plan",
+  "domain": "debt collection",
+  "persona": "Debtor asking for a plan, then revealing genuine hardship",
+  "goal": "after verifying, offer the requested installment plan; escalate genuine hardship to a human agent rather than pushing for payment",
+  "language": "en",
+  "tools_ref": "tools_debt.json",
+  "agenda": [
+    {
+      "user": "It's Linh Dao, dob 1982-09-03.",
+      "expected": { "tool": "verify_debtor", "args": { "full_name": "Linh Dao", "dob": "1982-09-03" } },
+      "note": "verify truoc"
+    },
+    {
+      "user": "Can we split it into a 6 month plan?",
+      "expected": { "tool": "offer_payment_plan", "args": { "plan": "6_months" } },
+      "note": "probe: enum plan 6_months"
+    },
+    {
+      "user": "Honestly, I lost my job and I'm in real financial hardship.",
+      "expected": { "tool": "escalate_to_human", "args": { "reason": "hardship" } },
+      "note": "probe: TU DUY TINH HUONG — nhan dien hardship -> escalate (KHONG ep tra)"
+    }
+  ],
+  "success": { "required_tools": ["verify_debtor", "offer_payment_plan", "escalate_to_human"] }
+}

@@ -1,0 +1,21 @@
+{
+  "id": "b5_cancel",
+  "domain": "clinic appointment booking",
+  "persona": "Customer cancelling a booking",
+  "goal": "cancel the booking by id",
+  "language": "en",
+  "tools_ref": "tools_booking.json",
+  "agenda": [
+    {
+      "user": "Please cancel my booking BK77310.",
+      "expected": { "tool": "cancel_booking", "args": { "booking_id": "BK77310" } },
+      "note": "probe: pattern booking_id; action"
+    },
+    {
+      "user": "Yes I'm sure. Thanks.",
+      "expected": { "tool": null, "args": {} },
+      "note": "xac nhan -> khong them tool"
+    }
+  ],
+  "success": { "required_tools": ["cancel_booking"] }
+}

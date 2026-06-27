@@ -1,0 +1,21 @@
+{
+  "id": "b3_service_not_offered",
+  "domain": "clinic appointment booking",
+  "persona": "Customer asking for a service not offered, then a valid one",
+  "goal": "refuse the unsupported service then check a valid one",
+  "language": "en",
+  "tools_ref": "tools_booking.json",
+  "agenda": [
+    {
+      "user": "Do you do MRI scans?",
+      "expected": { "tool": null, "args": {} },
+      "note": "probe: service NGOAI enum -> KHONG bia service/tool, phai noi khong co"
+    },
+    {
+      "user": "Okay, what about a general checkup on July 5th 2026?",
+      "expected": { "tool": "check_availability", "args": { "service": "general_checkup", "date": "2026-07-05" } },
+      "note": "probe: phuc hoi, enum service hop le"
+    }
+  ],
+  "success": { "required_tools": ["check_availability"] }
+}

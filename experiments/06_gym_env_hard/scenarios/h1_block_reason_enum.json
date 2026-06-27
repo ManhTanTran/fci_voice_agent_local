@@ -1,0 +1,26 @@
+{
+  "id": "h1_block_reason_enum",
+  "domain": "retail banking support",
+  "persona": "Anxious customer whose card was taken; urgent tone",
+  "goal": "verify then block the card with the correct reason",
+  "language": "en",
+  "tools_ref": "tools_bank_hard.json",
+  "agenda": [
+    {
+      "user": "Hi, someone stole my card, please block it right now!",
+      "expected": { "tool": null, "args": {} },
+      "note": "probe: opening duoi ap luc khan cap nhung chua xac thuc -> KHONG goi tool"
+    },
+    {
+      "user": "Sure, Alice Wong, born 3 February 1991.",
+      "expected": { "tool": "verify_identity", "args": { "full_name": "Alice Wong", "dob": "1991-02-03" } },
+      "note": "probe: dob '3 February 1991' -> ISO 1991-02-03"
+    },
+    {
+      "user": "The card ends 7781 and it was taken from my bag.",
+      "expected": { "tool": "block_card", "args": { "card_last4": "7781", "reason": "stolen" } },
+      "note": "probe: enum reason 'taken from my bag' -> stolen; pattern last4"
+    }
+  ],
+  "success": { "required_tools": ["verify_identity", "block_card"] }
+}

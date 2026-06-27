@@ -1,0 +1,21 @@
+{
+  "id": "s6_oos_then_knowledge",
+  "domain": "internet/telecom sales",
+  "persona": "Customer who first asks an off-topic question",
+  "goal": "do not route off-topic questions to knowledge; answer real ones",
+  "language": "en",
+  "tools_ref": "tools_sales.json",
+  "agenda": [
+    {
+      "user": "By the way, what's the weather like in Hanoi today?",
+      "expected": { "tool": null, "args": {} },
+      "note": "probe: OOS -> KHONG ep vao search_knowledge (khong co topic phu hop)"
+    },
+    {
+      "user": "Anyway, what fiber promotions do you have?",
+      "expected": { "tool": "search_knowledge", "args": { "topic": "promotion" } },
+      "note": "probe: cau hop le -> topic promotion"
+    }
+  ],
+  "success": { "required_tools": ["search_knowledge"] }
+}

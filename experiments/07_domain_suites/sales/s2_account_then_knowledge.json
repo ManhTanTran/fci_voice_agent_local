@@ -1,0 +1,21 @@
+{
+  "id": "s2_account_then_knowledge",
+  "domain": "internet/telecom sales",
+  "persona": "Existing customer checking their plan then asking a product question",
+  "goal": "look up the account, then answer a product-feature question from knowledge",
+  "language": "en",
+  "tools_ref": "tools_sales.json",
+  "agenda": [
+    {
+      "user": "Can you check what plan I'm on? My number is 0912345678.",
+      "expected": { "tool": "lookup_account", "args": { "phone": "0912345678" } },
+      "note": "probe: TRA CUU THONG TIN; pattern phone"
+    },
+    {
+      "user": "Thanks. Is the fiber 300 good for online gaming?",
+      "expected": { "tool": "search_knowledge", "args": { "topic": "product_features" } },
+      "note": "probe: TRA CUU TRI THUC topic product_features (KHONG phai lookup_account)"
+    }
+  ],
+  "success": { "required_tools": ["lookup_account", "search_knowledge"] }
+}

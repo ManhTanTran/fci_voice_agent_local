@@ -1,0 +1,26 @@
+{
+  "id": "s4_knowledge_then_signup",
+  "domain": "internet/telecom sales",
+  "persona": "Interested customer who asks then signs up and books a callback",
+  "goal": "answer from knowledge, register the chosen product, schedule a callback",
+  "language": "en",
+  "tools_ref": "tools_sales.json",
+  "agenda": [
+    {
+      "user": "I'm thinking of upgrading, what do your fiber plans cost?",
+      "expected": { "tool": "search_knowledge", "args": { "topic": "pricing" } },
+      "note": "probe: tri thuc pricing"
+    },
+    {
+      "user": "Okay, sign me up for the fiber 300.",
+      "expected": { "tool": "recommend_offer", "args": { "product": "fiber_300" } },
+      "note": "probe: action; enum product fiber_300"
+    },
+    {
+      "user": "Schedule a callback for July 6th 2026 at 15:00.",
+      "expected": { "tool": "schedule_callback", "args": { "date": "2026-07-06", "time": "15:00" } },
+      "note": "probe: action; date+time pattern"
+    }
+  ],
+  "success": { "required_tools": ["search_knowledge", "recommend_offer", "schedule_callback"] }
+}

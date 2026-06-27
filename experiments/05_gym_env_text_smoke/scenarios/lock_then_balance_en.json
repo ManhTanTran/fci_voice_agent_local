@@ -1,0 +1,32 @@
+{
+  "id": "lock_then_balance_en_v1",
+  "domain": "retail banking support",
+  "persona": "Customer who first locks a card then checks balance in one call",
+  "goal": "verify, lock the card, then read the balance",
+  "language": "en",
+  "tools": [
+    { "name": "verify_identity", "description": "verify the caller before any sensitive action", "params": ["full_name", "dob"] },
+    { "name": "lock_card", "description": "lock a card by its last 4 digits after identity is verified", "params": ["card_last4"] },
+    { "name": "get_balance", "description": "return current account balance for an account id", "params": ["account_id"] }
+  ],
+  "agenda": [
+    {
+      "user": "Hi, I need to lock my card and then check my balance.",
+      "expected": { "tool": null, "args": {} },
+      "note": "Neu ham hanh dong nhung chua xac thuc -> chua goi tool"
+    },
+    {
+      "user": "Sure, name David Kim, date of birth December 1st 1978.",
+      "expected": { "tool": "verify_identity", "args": { "full_name": "David Kim", "dob": "1978-12-01" } }
+    },
+    {
+      "user": "Please lock the card ending 3310 first.",
+      "expected": { "tool": "lock_card", "args": { "card_last4": "3310" } }
+    },
+    {
+      "user": "Now what is my balance, account AC-9982?",
+      "expected": { "tool": "get_balance", "args": { "account_id": "AC-9982" } }
+    }
+  ],
+  "success": { "required_tools": ["verify_identity", "lock_card", "get_balance"] }
+}

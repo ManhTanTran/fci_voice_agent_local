@@ -1,0 +1,26 @@
+{
+  "id": "h4_dispute_pattern_enum",
+  "domain": "retail banking support",
+  "persona": "Customer disputing two transactions for different reasons",
+  "goal": "verify then open disputes with correct txn ids and categories",
+  "language": "en",
+  "tools_ref": "tools_bank_hard.json",
+  "agenda": [
+    {
+      "user": "This is Dan Park, dob 1979-05-30.",
+      "expected": { "tool": "verify_identity", "args": { "full_name": "Dan Park", "dob": "1979-05-30" } },
+      "note": "verify thang"
+    },
+    {
+      "user": "I want to dispute transaction TX004412, I never received the item.",
+      "expected": { "tool": "dispute_transaction", "args": { "txn_id": "TX004412", "category": "not_received" } },
+      "note": "probe: pattern txn TX######; enum paraphrase 'never received'->not_received"
+    },
+    {
+      "user": "Also TX004488 was charged to me twice.",
+      "expected": { "tool": "dispute_transaction", "args": { "txn_id": "TX004488", "category": "duplicate" } },
+      "note": "probe: enum 'charged twice'->duplicate"
+    }
+  ],
+  "success": { "required_tools": ["verify_identity", "dispute_transaction"] }
+}

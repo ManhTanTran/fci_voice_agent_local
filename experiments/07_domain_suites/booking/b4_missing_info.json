@@ -1,0 +1,26 @@
+{
+  "id": "b4_missing_info",
+  "domain": "clinic appointment booking",
+  "persona": "Vague customer who gives details only gradually",
+  "goal": "ask for missing info, then check and book once details are complete",
+  "language": "en",
+  "tools_ref": "tools_booking.json",
+  "agenda": [
+    {
+      "user": "I want to book something next week.",
+      "expected": { "tool": null, "args": {} },
+      "note": "probe: thieu service+date -> phai hoi, KHONG goi tool"
+    },
+    {
+      "user": "Vaccination please, on July 8th 2026.",
+      "expected": { "tool": "check_availability", "args": { "service": "vaccination", "date": "2026-07-08" } },
+      "note": "probe: enum service; date ISO"
+    },
+    {
+      "user": "Book it at 11:00, name Minh Tran.",
+      "expected": { "tool": "create_booking", "args": { "service": "vaccination", "date": "2026-07-08", "time": "11:00", "full_name": "Minh Tran" } },
+      "note": "probe: ghep du slot tu lich su + ten"
+    }
+  ],
+  "success": { "required_tools": ["check_availability", "create_booking"] }
+}

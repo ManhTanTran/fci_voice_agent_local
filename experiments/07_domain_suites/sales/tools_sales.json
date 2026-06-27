@@ -1,0 +1,39 @@
+{
+  "_comment": "Domain BAN HANG (ISP/viễn thông) — nang luc: TRA CUU THONG TIN + TRA CUU TRI THUC (search_knowledge theo topic enum, chấm được) + action + opt-out compliance.",
+  "tools": [
+    {
+      "name": "lookup_account",
+      "description": "look up the customer's current plan/usage by phone number",
+      "params": [
+        { "name": "phone", "type": "string", "pattern": "^0\\d{9}$" }
+      ]
+    },
+    {
+      "name": "search_knowledge",
+      "description": "retrieve sales knowledge by topic to answer a customer question",
+      "params": [
+        { "name": "topic", "type": "string", "enum": ["pricing", "promotion", "product_features", "coverage_area", "contract_terms"] }
+      ]
+    },
+    {
+      "name": "recommend_offer",
+      "description": "register the product the customer wants to sign up for",
+      "params": [
+        { "name": "product", "type": "string", "enum": ["fiber_100", "fiber_300", "tv_combo", "mobile_addon"] }
+      ]
+    },
+    {
+      "name": "schedule_callback",
+      "description": "schedule a follow-up call with the customer",
+      "params": [
+        { "name": "date", "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        { "name": "time", "type": "string", "pattern": "^\\d{2}:\\d{2}$" }
+      ]
+    },
+    {
+      "name": "mark_not_interested",
+      "description": "record a do-not-call / not-interested request (compliance)",
+      "params": []
+    }
+  ]
+}

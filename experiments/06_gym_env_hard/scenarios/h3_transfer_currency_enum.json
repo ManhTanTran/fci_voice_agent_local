@@ -1,0 +1,26 @@
+{
+  "id": "h3_transfer_currency_enum",
+  "domain": "retail banking support",
+  "persona": "Customer making a transfer then changing the currency",
+  "goal": "verify then make a transfer with correct accounts, amount and currency",
+  "language": "en",
+  "tools_ref": "tools_bank_hard.json",
+  "agenda": [
+    {
+      "user": "Hi it's Carla Mendes, date of birth 1990-11-02.",
+      "expected": { "tool": "verify_identity", "args": { "full_name": "Carla Mendes", "dob": "1990-11-02" } },
+      "note": "verify thang"
+    },
+    {
+      "user": "Please transfer 250 euros from AC-1009 to AC-2231.",
+      "expected": { "tool": "transfer", "args": { "from_account": "AC-1009", "to_account": "AC-2231", "amount": 250, "currency": "EUR" } },
+      "note": "probe: enum currency 'euros'->EUR; 2 slot cung kieu (from/to KHONG hoan vi); amount number; pattern AC- x2"
+    },
+    {
+      "user": "Actually send it in dollars instead.",
+      "expected": { "tool": "transfer", "args": { "from_account": "AC-1009", "to_account": "AC-2231", "amount": 250, "currency": "USD" } },
+      "note": "probe: doi enum 'dollars'->USD; nho lai 3 slot con lai tu lich su"
+    }
+  ],
+  "success": { "required_tools": ["verify_identity", "transfer"] }
+}

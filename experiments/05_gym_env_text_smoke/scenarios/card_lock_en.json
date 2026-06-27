@@ -1,0 +1,51 @@
+{
+  "id": "card_lock_en_v1",
+  "domain": "retail banking support",
+  "persona": "Polite retail customer who has lost a debit card and is mildly anxious",
+  "goal": "verify the caller's identity and lock the lost debit card, then confirm",
+  "language": "en",
+  "tools": [
+    {
+      "name": "verify_identity",
+      "description": "verify the caller before any sensitive action",
+      "params": ["full_name", "dob"]
+    },
+    {
+      "name": "lock_card",
+      "description": "lock a card by its last 4 digits after identity is verified",
+      "params": ["card_last4"]
+    },
+    {
+      "name": "get_balance",
+      "description": "return current account balance",
+      "params": ["account_id"]
+    }
+  ],
+  "agenda": [
+    {
+      "user": "Hi, I just lost my debit card and I need to lock it right away.",
+      "expected": { "tool": null, "args": {} },
+      "note": "Mo dau: bot nen hoi xac thuc, chua du thong tin de goi tool"
+    },
+    {
+      "user": "Sure, my name is John Carter, date of birth March 5th 1990.",
+      "expected": {
+        "tool": "verify_identity",
+        "args": { "full_name": "John Carter", "dob": "1990-03-05" }
+      }
+    },
+    {
+      "user": "Yes please lock it, the last four digits are 8842.",
+      "expected": {
+        "tool": "lock_card",
+        "args": { "card_last4": "8842" }
+      }
+    },
+    {
+      "user": "Great, that is all, thank you so much.",
+      "expected": { "tool": null, "args": {} },
+      "note": "Ket thuc: khong can tool, chi can chot lich su"
+    }
+  ],
+  "success": { "required_tools": ["verify_identity", "lock_card"] }
+}

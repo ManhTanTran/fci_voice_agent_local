@@ -1,0 +1,46 @@
+{
+  "_comment": "Domain DAT LICH (phong kham) — nang luc: TRA CUU THONG TIN + action co xac nhan. Khong co cong xac thuc nang (do nhay thap).",
+  "tools": [
+    {
+      "name": "check_availability",
+      "description": "check open appointment slots for a service on a date",
+      "params": [
+        { "name": "service", "type": "string", "enum": ["general_checkup", "dental", "dermatology", "vaccination"] },
+        { "name": "date", "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
+      ]
+    },
+    {
+      "name": "create_booking",
+      "description": "create a new appointment after a slot is chosen",
+      "params": [
+        { "name": "service", "type": "string", "enum": ["general_checkup", "dental", "dermatology", "vaccination"] },
+        { "name": "date", "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        { "name": "time", "type": "string", "pattern": "^\\d{2}:\\d{2}$" },
+        { "name": "full_name", "type": "string" }
+      ]
+    },
+    {
+      "name": "reschedule_booking",
+      "description": "move an existing booking to a new date/time",
+      "params": [
+        { "name": "booking_id", "type": "string", "pattern": "^BK\\d{5}$" },
+        { "name": "new_date", "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        { "name": "new_time", "type": "string", "pattern": "^\\d{2}:\\d{2}$" }
+      ]
+    },
+    {
+      "name": "cancel_booking",
+      "description": "cancel an existing booking by id",
+      "params": [
+        { "name": "booking_id", "type": "string", "pattern": "^BK\\d{5}$" }
+      ]
+    },
+    {
+      "name": "get_booking",
+      "description": "look up details of an existing booking by id",
+      "params": [
+        { "name": "booking_id", "type": "string", "pattern": "^BK\\d{5}$" }
+      ]
+    }
+  ]
+}

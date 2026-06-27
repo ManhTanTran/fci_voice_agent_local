@@ -1,0 +1,34 @@
+{
+  "id": "chitchat_no_tool_en_v1",
+  "domain": "retail banking support",
+  "persona": "Chatty customer asking only general questions, no account action",
+  "goal": "answer general questions politely without calling any sensitive tool",
+  "language": "en",
+  "tools": [
+    { "name": "verify_identity", "description": "verify the caller before any sensitive action", "params": ["full_name", "dob"] },
+    { "name": "lock_card", "description": "lock a card by its last 4 digits after identity is verified", "params": ["card_last4"] },
+    { "name": "get_balance", "description": "return current account balance for an account id", "params": ["account_id"] }
+  ],
+  "agenda": [
+    {
+      "user": "Hi there, is your Main Street branch open on Saturdays?",
+      "expected": { "tool": null, "args": {} },
+      "note": "BAY FP: cau hoi chung, khong tool nao phu hop"
+    },
+    {
+      "user": "And do you charge a fee for international transfers in general?",
+      "expected": { "tool": null, "args": {} },
+      "note": "BAY FP: hoi chinh sach, khong phai hanh dong tai khoan"
+    },
+    {
+      "user": "My name is Tom by the way, just curious about your hours.",
+      "expected": { "tool": null, "args": {} },
+      "note": "BAY FP manh: co ten nhung KHONG yeu cau xac thuc -> khong duoc goi verify_identity"
+    },
+    {
+      "user": "Alright, that is all, thanks for the info.",
+      "expected": { "tool": null, "args": {} }
+    }
+  ],
+  "success": { "required_tools": [] }
+}

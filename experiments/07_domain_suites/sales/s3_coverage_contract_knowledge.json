@@ -1,0 +1,21 @@
+{
+  "id": "s3_coverage_contract_knowledge",
+  "domain": "internet/telecom sales",
+  "persona": "Customer checking coverage and contract terms",
+  "goal": "route coverage and contract questions to the right topics",
+  "language": "en",
+  "tools_ref": "tools_sales.json",
+  "agenda": [
+    {
+      "user": "Do you have coverage in Da Nang?",
+      "expected": { "tool": "search_knowledge", "args": { "topic": "coverage_area" } },
+      "note": "probe: topic coverage_area"
+    },
+    {
+      "user": "And what are the contract terms, is there a lock-in period?",
+      "expected": { "tool": "search_knowledge", "args": { "topic": "contract_terms" } },
+      "note": "probe: topic contract_terms"
+    }
+  ],
+  "success": { "required_tools": ["search_knowledge"] }
+}

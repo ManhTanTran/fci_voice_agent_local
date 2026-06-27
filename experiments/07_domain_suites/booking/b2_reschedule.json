@@ -1,0 +1,21 @@
+{
+  "id": "b2_reschedule",
+  "domain": "clinic appointment booking",
+  "persona": "Customer moving an existing appointment, then correcting the time",
+  "goal": "reschedule the booking to the right new date and time",
+  "language": "en",
+  "tools_ref": "tools_booking.json",
+  "agenda": [
+    {
+      "user": "I need to move booking BK40128 to July 10th 2026 at 09:00.",
+      "expected": { "tool": "reschedule_booking", "args": { "booking_id": "BK40128", "new_date": "2026-07-10", "new_time": "09:00" } },
+      "note": "probe: pattern booking_id BK#####; date+time"
+    },
+    {
+      "user": "Actually make it 10:00 instead.",
+      "expected": { "tool": "reschedule_booking", "args": { "booking_id": "BK40128", "new_date": "2026-07-10", "new_time": "10:00" } },
+      "note": "probe: correction time; nho lai id+date tu lich su"
+    }
+  ],
+  "success": { "required_tools": ["reschedule_booking"] }
+}

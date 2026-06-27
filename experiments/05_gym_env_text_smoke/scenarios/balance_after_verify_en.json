@@ -1,0 +1,32 @@
+{
+  "id": "balance_after_verify_en_v1",
+  "domain": "retail banking support",
+  "persona": "Calm customer who wants to check their balance",
+  "goal": "verify the caller then read out the account balance",
+  "language": "en",
+  "tools": [
+    { "name": "verify_identity", "description": "verify the caller before any sensitive action", "params": ["full_name", "dob"] },
+    { "name": "lock_card", "description": "lock a card by its last 4 digits after identity is verified", "params": ["card_last4"] },
+    { "name": "get_balance", "description": "return current account balance for an account id", "params": ["account_id"] }
+  ],
+  "agenda": [
+    {
+      "user": "Hello, I would like to check my account balance please.",
+      "expected": { "tool": null, "args": {} },
+      "note": "Chua xac thuc -> chua du dieu kien goi tool nhay cam"
+    },
+    {
+      "user": "It is Maria Lopez, born July 12th 1985.",
+      "expected": { "tool": "verify_identity", "args": { "full_name": "Maria Lopez", "dob": "1985-07-12" } }
+    },
+    {
+      "user": "My account id is AC-4471.",
+      "expected": { "tool": "get_balance", "args": { "account_id": "AC-4471" } }
+    },
+    {
+      "user": "Perfect, thank you very much.",
+      "expected": { "tool": null, "args": {} }
+    }
+  ],
+  "success": { "required_tools": ["verify_identity", "get_balance"] }
+}

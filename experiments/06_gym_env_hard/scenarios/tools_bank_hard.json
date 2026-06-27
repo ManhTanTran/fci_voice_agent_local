@@ -1,0 +1,63 @@
+{
+  "_comment": "Danh muc tool khó dùng chung — enum + pattern ép đúng chỗ free-form JSON hay sai. Vai 1 (khách hàng) sở hữu.",
+  "tools": [
+    {
+      "name": "verify_identity",
+      "description": "verify the caller before ANY sensitive action; required first",
+      "params": [
+        { "name": "full_name", "type": "string" },
+        { "name": "dob", "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
+      ]
+    },
+    {
+      "name": "block_card",
+      "description": "block a card after identity is verified",
+      "params": [
+        { "name": "card_last4", "type": "string", "pattern": "^\\d{4}$" },
+        { "name": "reason", "type": "string", "enum": ["lost", "stolen", "damaged", "fraud"] }
+      ]
+    },
+    {
+      "name": "get_balance",
+      "description": "return current account balance",
+      "params": [
+        { "name": "account_id", "type": "string", "pattern": "^AC-\\d{4}$" }
+      ]
+    },
+    {
+      "name": "get_statement",
+      "description": "send an account statement for a period",
+      "params": [
+        { "name": "account_id", "type": "string", "pattern": "^AC-\\d{4}$" },
+        { "name": "period", "type": "string", "enum": ["last_week", "last_month", "last_quarter"] }
+      ]
+    },
+    {
+      "name": "transfer",
+      "description": "move money between two accounts",
+      "params": [
+        { "name": "from_account", "type": "string", "pattern": "^AC-\\d{4}$" },
+        { "name": "to_account", "type": "string", "pattern": "^AC-\\d{4}$" },
+        { "name": "amount", "type": "number" },
+        { "name": "currency", "type": "string", "enum": ["USD", "EUR", "VND"] }
+      ]
+    },
+    {
+      "name": "dispute_transaction",
+      "description": "open a dispute for a specific transaction",
+      "params": [
+        { "name": "txn_id", "type": "string", "pattern": "^TX\\d{6}$" },
+        { "name": "category", "type": "string", "enum": ["fraud", "duplicate", "wrong_amount", "not_received"] }
+      ]
+    },
+    {
+      "name": "set_travel_notice",
+      "description": "register a travel notice so cards work abroad",
+      "params": [
+        { "name": "account_id", "type": "string", "pattern": "^AC-\\d{4}$" },
+        { "name": "country_code", "type": "string", "enum": ["US", "FR", "VN", "JP", "SG"] },
+        { "name": "end_date", "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
+      ]
+    }
+  ]
+}

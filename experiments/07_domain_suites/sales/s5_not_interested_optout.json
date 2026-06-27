@@ -1,0 +1,21 @@
+{
+  "id": "s5_not_interested_optout",
+  "domain": "internet/telecom sales",
+  "persona": "Customer who is not interested and wants to stop being called",
+  "goal": "honor the do-not-call request (compliance), do not push further",
+  "language": "en",
+  "tools_ref": "tools_sales.json",
+  "agenda": [
+    {
+      "user": "I'm really not interested, please don't call me again.",
+      "expected": { "tool": "mark_not_interested", "args": {} },
+      "note": "probe: compliance opt-out -> ghi nhan do-not-call, KHONG chao moi tiep"
+    },
+    {
+      "user": "Thank you, goodbye.",
+      "expected": { "tool": null, "args": {} },
+      "note": "ket thuc"
+    }
+  ],
+  "success": { "required_tools": ["mark_not_interested"] }
+}

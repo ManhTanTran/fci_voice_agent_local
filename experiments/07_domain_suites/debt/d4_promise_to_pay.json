@@ -1,0 +1,21 @@
+{
+  "id": "d4_promise_to_pay",
+  "domain": "debt collection",
+  "persona": "Cooperative debtor agreeing to pay by a date",
+  "goal": "after verifying, record the promise to pay with the agreed amount and date",
+  "language": "en",
+  "tools_ref": "tools_debt.json",
+  "agenda": [
+    {
+      "user": "Tan Bui, dob 1978-11-25.",
+      "expected": { "tool": "verify_debtor", "args": { "full_name": "Tan Bui", "dob": "1978-11-25" } },
+      "note": "verify truoc"
+    },
+    {
+      "user": "I can pay 5000 by July 15th 2026.",
+      "expected": { "tool": "record_promise_to_pay", "args": { "amount": 5000, "date": "2026-07-15" } },
+      "note": "probe: trich amount (number) + date ISO; action"
+    }
+  ],
+  "success": { "required_tools": ["verify_debtor", "record_promise_to_pay"] }
+}

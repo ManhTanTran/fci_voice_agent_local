@@ -1,0 +1,26 @@
+{
+  "id": "b1_check_and_book",
+  "domain": "clinic appointment booking",
+  "persona": "Customer booking a dermatology appointment",
+  "goal": "check availability then create the booking",
+  "language": "en",
+  "tools_ref": "tools_booking.json",
+  "agenda": [
+    {
+      "user": "Hi, do you have any dermatology slots on July 3rd 2026?",
+      "expected": { "tool": "check_availability", "args": { "service": "dermatology", "date": "2026-07-03" } },
+      "note": "probe: enum service; date 'July 3rd 2026'->ISO"
+    },
+    {
+      "user": "Great, book me in at 14:30 then. My name is Lan Pham.",
+      "expected": { "tool": "create_booking", "args": { "service": "dermatology", "date": "2026-07-03", "time": "14:30", "full_name": "Lan Pham" } },
+      "note": "probe: pattern time HH:MM; nho lai service+date; trich ten"
+    },
+    {
+      "user": "Perfect, thank you, that is all.",
+      "expected": { "tool": null, "args": {} },
+      "note": "ket thuc"
+    }
+  ],
+  "success": { "required_tools": ["check_availability", "create_booking"] }
+}

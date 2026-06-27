@@ -1,0 +1,26 @@
+{
+  "id": "h7_travel_json_hostile",
+  "domain": "retail banking support",
+  "persona": "Customer setting a travel notice, with punctuation-heavy confirmation",
+  "goal": "verify then set a travel notice with the right country code and date",
+  "language": "en",
+  "tools_ref": "tools_bank_hard.json",
+  "agenda": [
+    {
+      "user": "Frank Ocean, dob 1981-10-31.",
+      "expected": { "tool": "verify_identity", "args": { "full_name": "Frank Ocean", "dob": "1981-10-31" } },
+      "note": "verify thang"
+    },
+    {
+      "user": "Set a travel notice for France until 2026-08-15 on account AC-3310.",
+      "expected": { "tool": "set_travel_notice", "args": { "account_id": "AC-3310", "country_code": "FR", "end_date": "2026-08-15" } },
+      "note": "probe: enum country 'France'->FR; date ISO; pattern AC-; 3 slot"
+    },
+    {
+      "user": "I said \"France\" {not Spain}, understand?",
+      "expected": { "tool": null, "args": {} },
+      "note": "probe: input chua dau nhay+ngoac nhon (de gay JSON); chi xac nhan -> KHONG goi; 'Spain' ngoai enum"
+    }
+  ],
+  "success": { "required_tools": ["verify_identity", "set_travel_notice"] }
+}

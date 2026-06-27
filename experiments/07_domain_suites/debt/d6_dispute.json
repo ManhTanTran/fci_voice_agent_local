@@ -1,0 +1,26 @@
+{
+  "id": "d6_dispute",
+  "domain": "debt collection",
+  "persona": "Debtor disputing the debt, claiming it is already paid",
+  "goal": "after verifying, escalate disputes to a human agent rather than arguing or recording payment",
+  "language": "en",
+  "tools_ref": "tools_debt.json",
+  "agenda": [
+    {
+      "user": "Quan Ho, dob 1975-06-20.",
+      "expected": { "tool": "verify_debtor", "args": { "full_name": "Quan Ho", "dob": "1975-06-20" } },
+      "note": "verify truoc"
+    },
+    {
+      "user": "I don't owe this. I already paid it last month. This is wrong.",
+      "expected": { "tool": "escalate_to_human", "args": { "reason": "dispute" } },
+      "note": "probe: TU DUY TINH HUONG — tranh chap -> escalate dispute (KHONG cai/khong record)"
+    },
+    {
+      "user": "Yes please, thank you.",
+      "expected": { "tool": null, "args": {} },
+      "note": "ket thuc"
+    }
+  ],
+  "success": { "required_tools": ["verify_debtor", "escalate_to_human"] }
+}

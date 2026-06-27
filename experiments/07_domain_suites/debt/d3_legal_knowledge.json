@@ -1,0 +1,26 @@
+{
+  "id": "d3_legal_knowledge",
+  "domain": "debt collection",
+  "persona": "Verified debtor asking factual questions about consequences and options",
+  "goal": "after verifying, answer policy questions factually from the knowledge base; do not threaten",
+  "language": "en",
+  "tools_ref": "tools_debt.json",
+  "agenda": [
+    {
+      "user": "It's Mai Vu, dob 1990-07-08.",
+      "expected": { "tool": "verify_debtor", "args": { "full_name": "Mai Vu", "dob": "1990-07-08" } },
+      "note": "verify truoc"
+    },
+    {
+      "user": "What actually happens, legally, if I just don't pay?",
+      "expected": { "tool": "search_policy", "args": { "topic": "legal_consequence" } },
+      "note": "probe: TRA CUU TRI THUC topic legal_consequence (su that phap ly, KHONG phai de doa)"
+    },
+    {
+      "user": "And are there any installment options?",
+      "expected": { "tool": "search_policy", "args": { "topic": "payment_options" } },
+      "note": "probe: topic payment_options"
+    }
+  ],
+  "success": { "required_tools": ["verify_debtor", "search_policy"] }
+}

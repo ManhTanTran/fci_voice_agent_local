@@ -1,0 +1,31 @@
+{
+  "id": "h2_distractor_and_correction",
+  "domain": "retail banking support",
+  "persona": "Customer reading a long card number, then correcting himself",
+  "goal": "verify, then block the right card with the right reason despite distractors",
+  "language": "en",
+  "tools_ref": "tools_bank_hard.json",
+  "agenda": [
+    {
+      "user": "Hi, this is Ben Tran, dob 1988-07-19, I need to block my card.",
+      "expected": { "tool": "verify_identity", "args": { "full_name": "Ben Tran", "dob": "1988-07-19" } },
+      "note": "probe: co intent hanh dong nhung phai verify TRUOC (chua co last4/reason)"
+    },
+    {
+      "user": "Block it — the full number is 4012 3344 5566 7781.",
+      "expected": { "tool": null, "args": {} },
+      "note": "probe: distractor 16 chu so (khong lay nham 4 dau); reason CON THIEU -> phai hoi, KHONG goi"
+    },
+    {
+      "user": "It was lost. The last four are 7781.",
+      "expected": { "tool": "block_card", "args": { "card_last4": "7781", "reason": "lost" } },
+      "note": "probe: enum lost; pattern last4; ghep du slot moi goi"
+    },
+    {
+      "user": "Wait, sorry, the last four are 7718, not 7781.",
+      "expected": { "tool": "block_card", "args": { "card_last4": "7718", "reason": "lost" } },
+      "note": "probe: correction/negation -> 7718; nho lai reason=lost tu lich su"
+    }
+  ],
+  "success": { "required_tools": ["verify_identity", "block_card"] }
+}

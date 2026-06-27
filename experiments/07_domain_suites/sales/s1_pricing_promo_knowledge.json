@@ -1,0 +1,21 @@
+{
+  "id": "s1_pricing_promo_knowledge",
+  "domain": "internet/telecom sales",
+  "persona": "Customer asking about prices and current promotions",
+  "goal": "route each question to the right knowledge topic",
+  "language": "en",
+  "tools_ref": "tools_sales.json",
+  "agenda": [
+    {
+      "user": "Hi, how much is your 300 Mbps fiber plan?",
+      "expected": { "tool": "search_knowledge", "args": { "topic": "pricing" } },
+      "note": "probe: TRA CUU TRI THUC -> topic pricing"
+    },
+    {
+      "user": "And do you have any promotions running right now?",
+      "expected": { "tool": "search_knowledge", "args": { "topic": "promotion" } },
+      "note": "probe: dinh tuyen topic promotion (khac pricing)"
+    }
+  ],
+  "success": { "required_tools": ["search_knowledge"] }
+}

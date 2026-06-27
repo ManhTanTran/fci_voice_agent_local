@@ -1,0 +1,26 @@
+{
+  "id": "h5_statement_vs_balance",
+  "domain": "retail banking support",
+  "persona": "Customer asking for a statement then a balance on the same account",
+  "goal": "verify then pick the right tool between statement and balance",
+  "language": "en",
+  "tools_ref": "tools_bank_hard.json",
+  "agenda": [
+    {
+      "user": "Emma Stone here, born 1986-04-21.",
+      "expected": { "tool": "verify_identity", "args": { "full_name": "Emma Stone", "dob": "1986-04-21" } },
+      "note": "verify thang"
+    },
+    {
+      "user": "Could you send my statement for last month? Account AC-7782.",
+      "expected": { "tool": "get_statement", "args": { "account_id": "AC-7782", "period": "last_month" } },
+      "note": "probe: chon tool get_statement (KHONG phai get_balance); enum period last_month; pattern AC-"
+    },
+    {
+      "user": "And what is the current balance on that account?",
+      "expected": { "tool": "get_balance", "args": { "account_id": "AC-7782" } },
+      "note": "probe: doi sang get_balance; nho lai account tu lich su"
+    }
+  ],
+  "success": { "required_tools": ["verify_identity", "get_statement", "get_balance"] }
+}
