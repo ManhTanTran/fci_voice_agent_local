@@ -1,0 +1,14 @@
+{
+  "id": "ns_crosstalk_user_target",
+  "category": "noisy_N2",
+  "environment": "noisy",
+  "agent_utterance": "Dạ em sẽ giữ máy trong lúc anh chuẩn bị thông tin, khi nào sẵn sàng anh đọc giúp em số tài khoản để em đối chiếu...",
+  "events": [
+    { "speaker": "other", "text": "con hỏi nó số tài khoản nào", "t_start_s": 1.0, "duration_s": 1.3, "tag": "cross_talk" },
+    { "speaker": "user", "text": "Tài khoản của tôi là 0021456789.", "t_start_s": 1.6, "duration_s": 1.6, "tag": "early_answer" }
+  ],
+  "expected": "INTERRUPT",
+  "snr_db": 4,
+  "latency_budget_ms": 150,
+  "note": "Giua cross-talk, KHACH MUC TIEU thuc su cung cap thong tin -> ngat dung giong user; semantic loc duoc, energy ngat theo su kien dau (other) sai thoi diem."
+}

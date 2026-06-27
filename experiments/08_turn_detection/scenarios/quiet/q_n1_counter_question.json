@@ -1,0 +1,12 @@
+{
+  "id": "q_n1_counter_question",
+  "category": "N1",
+  "environment": "quiet",
+  "agent_utterance": "Dạ sau khi khóa thẻ, anh có thể đăng ký phát hành lại tại quầy hoặc trên ứng dụng, phí phát hành lại là...",
+  "events": [
+    { "speaker": "user", "text": "Khoan đã, phí khóa thẻ là bao nhiêu?", "t_start_s": 1.3, "duration_s": 1.4, "tag": "question" }
+  ],
+  "expected": "INTERRUPT",
+  "latency_budget_ms": 150,
+  "note": "Khach hoi nguoc giua chung -> ngat de tra loi (N1)."
+}

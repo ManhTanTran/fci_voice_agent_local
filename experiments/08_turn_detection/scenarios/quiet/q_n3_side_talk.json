@@ -1,0 +1,12 @@
+{
+  "id": "q_n3_side_talk",
+  "category": "N3",
+  "environment": "quiet",
+  "agent_utterance": "Dạ để hoàn tất, anh vui lòng xác nhận giúp em địa chỉ nhận thẻ mới có còn là địa chỉ đăng ký ban đầu không ạ...",
+  "events": [
+    { "speaker": "other", "text": "Con lấy giúp mẹ cái cốc nước trên bàn nhé.", "t_start_s": 1.2, "duration_s": 1.6, "tag": "side_talk" }
+  ],
+  "expected": "HOLD",
+  "latency_budget_ms": 150,
+  "note": "PHAN BIET: khach noi voi nguoi ben canh (speaker=other) -> energy-VAD ngat nham (FP), semantic loc theo nguoi noi."
+}

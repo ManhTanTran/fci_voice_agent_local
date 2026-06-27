@@ -1,0 +1,12 @@
+{
+  "id": "q_n2_backchannel_long",
+  "category": "N2",
+  "environment": "quiet",
+  "agent_utterance": "Dạ em đang tiến hành khóa thẻ cho anh, thao tác này mất khoảng vài giây, anh vui lòng giữ máy giúp em...",
+  "events": [
+    { "speaker": "user", "text": "Dạ vâng.", "t_start_s": 1.4, "duration_s": 0.5, "tag": "backchannel" }
+  ],
+  "expected": "HOLD",
+  "latency_budget_ms": 150,
+  "note": "PHAN BIET: am dem hoi DAI (0.5s) -> energy-VAD ngat nham (FP), semantic giu dung."
+}

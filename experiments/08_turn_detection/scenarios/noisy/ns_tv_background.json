@@ -1,0 +1,13 @@
+{
+  "id": "ns_tv_background",
+  "category": "noisy_N1",
+  "environment": "noisy",
+  "agent_utterance": "Dạ thẻ mới sẽ được gửi về địa chỉ đăng ký trong vòng bảy ngày làm việc, anh vui lòng giữ máy để em hoàn tất thủ tục...",
+  "events": [
+    { "speaker": "noise", "text": "kính thưa quý vị và các bạn chương trình thời sự hôm nay", "t_start_s": 1.0, "duration_s": 2.2, "tag": "music" }
+  ],
+  "expected": "HOLD",
+  "snr_db": 8,
+  "latency_budget_ms": 150,
+  "note": "Tieng TV nen (ban tin) ASR nhan nham -> energy-VAD FP, semantic loc speaker=noise -> HOLD."
+}

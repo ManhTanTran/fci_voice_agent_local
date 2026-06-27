@@ -1,0 +1,13 @@
+{
+  "id": "ns_music_only",
+  "category": "noisy_N1",
+  "environment": "noisy",
+  "agent_utterance": "Dạ em xác nhận yêu cầu khóa thẻ của anh đã được ghi nhận, em xin phép đọc lại mã tham chiếu để anh tiện theo dõi...",
+  "events": [
+    { "speaker": "noise", "text": "yêu em dài lâu ta bên nhau tới mai sau", "t_start_s": 0.9, "duration_s": 2.0, "tag": "music" }
+  ],
+  "expected": "HOLD",
+  "snr_db": 5,
+  "latency_budget_ms": 150,
+  "note": "PHAN BIET: chi co tieng nhac (ASR nghe nham loi bai hat), khong phai khach noi -> energy-VAD ngat nham (FP), semantic loc speaker=noise."
+}

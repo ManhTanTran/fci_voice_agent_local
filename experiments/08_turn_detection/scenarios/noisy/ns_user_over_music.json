@@ -1,0 +1,14 @@
+{
+  "id": "ns_user_over_music",
+  "category": "noisy_N1",
+  "environment": "noisy",
+  "agent_utterance": "Dạ ngoài ra ngân hàng hiện có chương trình ưu đãi hoàn tiền cho thẻ tín dụng mới, anh có muốn em tư vấn thêm không ạ...",
+  "events": [
+    { "speaker": "noise", "text": "nhạc nền quán cà phê xập xình", "t_start_s": 0.8, "duration_s": 2.5, "tag": "music" },
+    { "speaker": "user", "text": "Không cần đâu, khóa thẻ giúp tôi thôi.", "t_start_s": 1.4, "duration_s": 1.5, "tag": "early_answer" }
+  ],
+  "expected": "INTERRUPT",
+  "snr_db": 5,
+  "latency_budget_ms": 150,
+  "note": "Khach THAT SU noi de tren nhac nen -> phai ngat; semantic bo qua noise, bat su kien giong user."
+}

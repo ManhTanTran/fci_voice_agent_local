@@ -64,12 +64,11 @@
 - **[03_structured_decoding.md](03_structured_decoding.md)** (Giải mã có ràng buộc):
   - Cơ chế ép tool-call vào JSON-schema bằng xgrammar và cách kiểm thử so sánh free-form với constrained.
   - Phân tích structured decoding vá được lớp lỗi định dạng nào và KHÔNG vá được lỗi ngữ nghĩa nào (đo trên bộ kịch bản khó exp 06).
-- **Spec harness phát hiện lượt thoại (Kế hoạch)**:
-  - Đặc tả kỹ thuật cho bộ sinh âm thanh giả lập và các cấp độ mô phỏng âm thanh (fidelity v1 đến v3).
-- **Spec harness gọi hàm nghiệp vụ (Kế hoạch)**:
-  - Đặc tả kỹ thuật cho bộ sinh kịch bản văn bản và cơ chế chấm điểm gọi hàm qua ba tầng chất lượng.
-- **Scorecard và Metric (Kế hoạch)**:
-  - Thiết kế cấu trúc báo cáo ma trận nhầm lẫn tự động và cơ chế tính toán độ tương quan sim-to-real.
+- **[04_turn_detection.md](04_turn_detection.md)** (Harness phát hiện lượt thoại — đã hiện thực text/event-first):
+  - Schema kịch bản theo sự kiện thoại, scorer ma trận nhầm INTERRUPT/HOLD + độ trễ, ba bậc decider (energy-VAD / semantic-rule / LLM).
+  - Đo trên 17 kịch bản hai môi trường: semantic vá sạch lớp ngắt nhầm của energy-VAD (65% -> 100%); kèm cảnh báo độ trễ đang là synthetic.
+- **Renderer audio v1→v3 (Kế hoạch)**:
+  - Đặc tả bộ sinh âm thanh giả lập (ghép thời gian, trộn nhiễu, hạ 8kHz μ-law) để đo độ trễ thật thay số synthetic.
 
 ---
 
@@ -77,9 +76,10 @@
 
 - **Dữ liệu kịch bản thủ công hiện tại**: `data/Testcase_Ngắt lời.xlsx`.
 - **Cơ chế chấm điểm gọi hàm ba tầng**: [03_tool_calling_stages.md](../06_llm_agent/03_tool_calling_stages.md).
-- **Mã nguồn hệ thống giả lập (Khi triển khai)**:
+- **Mã nguồn hệ thống giả lập (đã triển khai)**:
   - Thư mục thư viện dùng chung: `src/fci_voice/sim/`.
-  - Thư mục thực nghiệm tương ứng: `experiments/05_sim_turn_detection/` và `experiments/06_sim_tool_calling/`.
+  - Tool-calling: `experiments/05_gym_env_text_smoke/` (thông luồng) · `06_gym_env_hard/` (suite khó) · `07_domain_suites/` (3 domain CSKH).
+  - Turn-detection: `experiments/08_turn_detection/`.
 
 ---
 

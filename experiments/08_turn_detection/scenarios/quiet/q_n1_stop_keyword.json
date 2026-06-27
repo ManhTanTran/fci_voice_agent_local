@@ -1,0 +1,12 @@
+{
+  "id": "q_n1_stop_keyword",
+  "category": "N1",
+  "environment": "quiet",
+  "agent_utterance": "Dạ để khóa thẻ, em xin phép đọc lại các bước cần xác minh gồm có họ tên, ngày sinh và bốn số cuối của thẻ ạ...",
+  "events": [
+    { "speaker": "user", "text": "Khoan, dừng lại đã.", "t_start_s": 1.2, "duration_s": 0.5, "tag": "stop_keyword" }
+  ],
+  "expected": "INTERRUPT",
+  "latency_budget_ms": 150,
+  "note": "Khach dung tu khoa dung dut khoat -> phai ngat ngay (N1)."
+}

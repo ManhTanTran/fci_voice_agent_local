@@ -1,0 +1,12 @@
+{
+  "id": "q_n1_correction",
+  "category": "N1",
+  "environment": "quiet",
+  "agent_utterance": "Dạ vậy em sẽ khóa thẻ tín dụng đứng tên anh và phát hành lại thẻ mới trong vòng bảy ngày làm việc...",
+  "events": [
+    { "speaker": "user", "text": "Không không, không phải thẻ tín dụng.", "t_start_s": 1.0, "duration_s": 1.2, "tag": "correction" }
+  ],
+  "expected": "INTERRUPT",
+  "latency_budget_ms": 150,
+  "note": "Khach sua thong tin sai cua bot -> ngat de sua kip (N1)."
+}

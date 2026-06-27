@@ -1,0 +1,12 @@
+{
+  "id": "q_n1_early_answer",
+  "category": "N1",
+  "environment": "quiet",
+  "agent_utterance": "Dạ anh vui lòng đọc giúp em bốn số cuối của thẻ để em đối chiếu, sau đó em sẽ tiến hành...",
+  "events": [
+    { "speaker": "user", "text": "Bốn số cuối là 9012.", "t_start_s": 1.4, "duration_s": 1.3, "tag": "early_answer" }
+  ],
+  "expected": "INTERRUPT",
+  "latency_budget_ms": 150,
+  "note": "Khach tra loi som khi bot chua noi xong -> ngat de tiep nhan (N1)."
+}

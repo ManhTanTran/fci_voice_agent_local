@@ -1,0 +1,14 @@
+{
+  "id": "ns_crosstalk_other",
+  "category": "noisy_N2",
+  "environment": "noisy",
+  "agent_utterance": "Dạ để bảo đảm an toàn, anh vui lòng không chia sẻ mã OTP cho bất kỳ ai kể cả nhân viên ngân hàng, em xin nhắc lại...",
+  "events": [
+    { "speaker": "other", "text": "ai gọi đấy, để mẹ nghe cho", "t_start_s": 1.1, "duration_s": 1.4, "tag": "cross_talk" },
+    { "speaker": "other", "text": "không sao đâu con cứ nói chuyện đi", "t_start_s": 1.3, "duration_s": 1.5, "tag": "cross_talk" }
+  ],
+  "expected": "HOLD",
+  "snr_db": 3,
+  "latency_budget_ms": 150,
+  "note": "PHAN BIET: nhieu nguoi noi chong cheo nhung KHONG phai khach muc tieu -> energy-VAD ngat nham (FP), semantic chi cho phep giong user."
+}

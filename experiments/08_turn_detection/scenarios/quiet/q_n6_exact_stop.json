@@ -1,0 +1,12 @@
+{
+  "id": "q_n6_exact_stop",
+  "category": "N6",
+  "environment": "quiet",
+  "agent_utterance": "Dạ tiếp theo em xin giới thiệu thêm gói bảo hiểm thẻ với mức phí ưu đãi chỉ dành cho khách hàng thân thiết...",
+  "events": [
+    { "speaker": "user", "text": "Stop. Bỏ qua phần đó đi.", "t_start_s": 1.5, "duration_s": 0.6, "tag": "stop_keyword" }
+  ],
+  "expected": "INTERRUPT",
+  "latency_budget_ms": 150,
+  "note": "Khach dung dung tu khoa yeu cau dung -> ngat (N6)."
+}

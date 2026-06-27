@@ -1,0 +1,14 @@
+{
+  "id": "ns_user_stopword_in_noise",
+  "category": "noisy_N1",
+  "environment": "noisy",
+  "agent_utterance": "Dạ tiếp theo em xin phép giới thiệu gói tiết kiệm online lãi suất ưu đãi đang được nhiều khách hàng quan tâm trong tháng này...",
+  "events": [
+    { "speaker": "noise", "text": "tiếng còi xe ngoài đường ồn ào", "t_start_s": 0.7, "duration_s": 2.0, "tag": "music" },
+    { "speaker": "user", "text": "Thôi dừng lại, tôi không quan tâm.", "t_start_s": 1.5, "duration_s": 1.2, "tag": "stop_keyword" }
+  ],
+  "expected": "INTERRUPT",
+  "snr_db": 2,
+  "latency_budget_ms": 150,
+  "note": "Khach dung tu khoa 'thoi dung lai' giua nen on -> phai ngat; semantic bat stop-keyword cua giong user."
+}

@@ -1,0 +1,12 @@
+{
+  "id": "q_n2_backchannel_uhhuh",
+  "category": "N2",
+  "environment": "quiet",
+  "agent_utterance": "Dạ sau khi khóa, mọi giao dịch thanh toán và rút tiền từ thẻ này sẽ tạm dừng cho đến khi anh mở lại...",
+  "events": [
+    { "speaker": "user", "text": "Ừ ừm.", "t_start_s": 1.1, "duration_s": 0.22, "tag": "backchannel" }
+  ],
+  "expected": "HOLD",
+  "latency_budget_ms": 150,
+  "note": "Am dem 'u um' nguoi nghe danh dau dang nghe -> KHONG ngat (N2)."
+}

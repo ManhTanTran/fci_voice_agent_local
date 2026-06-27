@@ -1,0 +1,12 @@
+{
+  "id": "q_n2_backchannel_da",
+  "category": "N2",
+  "environment": "quiet",
+  "agent_utterance": "Dạ em xin xác nhận lại, anh muốn khóa tạm thời thẻ ghi nợ để tránh phát sinh giao dịch lạ, đúng không ạ...",
+  "events": [
+    { "speaker": "user", "text": "Dạ.", "t_start_s": 1.6, "duration_s": 0.2, "tag": "backchannel" }
+  ],
+  "expected": "HOLD",
+  "latency_budget_ms": 150,
+  "note": "Am dem ngan xac nhan -> KHONG ngat (N2)."
+}

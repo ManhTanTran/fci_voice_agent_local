@@ -1,0 +1,12 @@
+{
+  "id": "q_n5_full_overlap",
+  "category": "N5",
+  "environment": "quiet",
+  "agent_utterance": "Dạ em cảm ơn anh đã chờ máy, hiện tại tổng đài đang ghi nhận yêu cầu của anh và em xin phép...",
+  "events": [
+    { "speaker": "user", "text": "Tôi muốn khóa thẻ ngay bây giờ.", "t_start_s": 0.8, "duration_s": 1.5, "tag": "overlap_full" }
+  ],
+  "expected": "INTERRUPT",
+  "latency_budget_ms": 150,
+  "note": "Khach noi de ca cau len thoai bot -> ngat (N5)."
+}
