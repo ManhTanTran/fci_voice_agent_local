@@ -61,6 +61,9 @@
 - **[02_gym_env_and_roles.md](02_gym_env_and_roles.md)** (Môi trường kiểm thử và vai trò):
   - Thiết kế chi tiết cấu trúc Gym-env và Bot-agent để phục vụ việc so sánh phiên bản một cách công bằng.
   - Định nghĩa mô hình 3 vai (Khách hàng, FCI-bot-dev, Solution-dev) để khép kín vòng lặp kiểm thử độc lập.
+- **[03_structured_decoding.md](03_structured_decoding.md)** (Giải mã có ràng buộc):
+  - Cơ chế ép tool-call vào JSON-schema bằng xgrammar và cách kiểm thử so sánh free-form với constrained.
+  - Phân tích structured decoding vá được lớp lỗi định dạng nào và KHÔNG vá được lỗi ngữ nghĩa nào (đo trên bộ kịch bản khó exp 06).
 - **Spec harness phát hiện lượt thoại (Kế hoạch)**:
   - Đặc tả kỹ thuật cho bộ sinh âm thanh giả lập và các cấp độ mô phỏng âm thanh (fidelity v1 đến v3).
 - **Spec harness gọi hàm nghiệp vụ (Kế hoạch)**:
