@@ -1,16 +1,31 @@
 # 12 — Deck trình bày: Voice AI Agent tổng đài (tổng thể → component → bài toán challenge)
 
-> [!IMPORTANT]
-> - **Mục đích deck**: dùng để trình bày trực quan cho team và cho FCI, thảo luận và **hiệu chỉnh lại thông tin về hệ thống FCI**.
-> - **Nguồn hiểu biết**: phần mô tả hệ FCI ở đây là **cách hiểu của team dựng lại** từ (a) sơ đồ kiến trúc tổng quát FCI cung cấp, (b) dữ liệu mẫu, (c) một số kết quả test nhỏ.
-> - **Không phải** đặc tả hệ thống nội bộ thật của FCI. Mọi khối "4 lớp" cần FCI xác nhận hoặc sửa lại.
-> - **Số liệu**: các con số hãng tự công bố hoặc chưa chạy lại đều gắn nhãn *tự công bố / chưa xác minh*.
-
----
+> **Mục đích tài liệu:**
+>
+> - Trình bày trực quan kiến trúc Voice AI Agent cho team nội bộ và đối tác FCI.
+>
+> - Đóng vai trò làm cơ sở thảo luận để hiệu chỉnh các thông tin kỹ thuật của hệ thống.
+>
+> - Tập hợp các cách hiểu của team dựa trên sơ đồ tổng quát, dữ liệu mẫu và kết quả thử nghiệm.
+>
+> - Làm rõ các khối chức năng và số liệu tự công bố cần FCI xác nhận hoặc đính chính.
 
 ## 0. Bản đồ deck
 
-- **Mỗi topic = 1 sơ đồ + 1 bảng chú giải thành phần**. Trình bày theo mạch từ tổng thể xuống chi tiết:
+- **Cấu trúc chung của mỗi chủ đề**:
+  - Tích hợp một sơ đồ luồng trực quan.
+  - Kèm theo một bảng chú giải chi tiết các thành phần.
+  - Trình bày tuần tự theo mạch logic đi từ tổng quát đến chi tiết.
+
+- **Các điểm đau cốt lõi cần giải quyết**:
+  - **Điểm đau #1 — Ngắt lời (Barge-in)**:
+    - Hiệu suất hiện tại: Đạt độ chính xác khoảng 76% với thời gian phản hồi 280ms.
+    - Chỉ tiêu hướng tới: Đạt độ chính xác từ 85% trở lên với độ trễ dưới 150ms.
+    - Lưu ý: Số liệu nội bộ và chưa được thực hiện kiểm chứng độc lập.
+  - **Điểm đau #2 — Gọi hàm (Tool-calling)**:
+    - Hiệu suất hiện tại: Đạt độ chính xác khoảng 62%.
+    - Chỉ tiêu hướng tới: Đạt độ chính xác từ 90% trở lên.
+    - Lưu ý: Số liệu đo đạc nội bộ.
 
 | # | Topic | Vai trò |
 | :--- | :--- | :--- |
@@ -26,15 +41,15 @@
 | T10 | Ba tầng chất lượng tool-call và XGrammar | Challenge #2 (chiều sâu) |
 | T11 | Build-vs-Buy: Krisp (mua) và open-source (tự xây) | Hướng đi cho chốt chặn |
 
-- **Hai điểm đau xuyên suốt deck** (mục tiêu cần vá):
-  - **Điểm đau #1 — Ngắt lời (barge-in)**: hiện ~76% chính xác / 280ms, mục tiêu ≥85% / ≤150ms. *(số nội bộ, chưa chạy lại độc lập)*
-  - **Điểm đau #2 — Gọi hàm (tool-calling)**: hiện ~62% chính xác, mục tiêu ≥90%. *(số nội bộ)*
-
 ---
 
 ## T1 — Vòng lặp Voice Agent tổng thể
 
-- **Câu chuyện**: một cuộc gọi là vòng lặp khép kín: tiếng khách vào, hệ thống hiểu, sinh câu trả lời, phát tiếng ra, rồi lại nghe tiếp.
+- **Dẫn dắt bối cảnh**:
+  - Một cuộc gọi thoại là một vòng lặp khép kín liên tục.
+  - Tín hiệu âm thanh của khách hàng đi vào hệ thống.
+  - Hệ thống thực hiện nhận dạng, suy luận và sinh câu trả lời.
+  - Bot phát âm thanh phản hồi và tiếp tục lắng nghe lượt lời tiếp theo.
 
 ```mermaid
 graph TD
@@ -44,8 +59,6 @@ graph TD
   AGENT --> TTS["TTS: văn bản sang giọng nói"]
   TTS --> USER
 ```
-
-- **Bảng chú giải thành phần**:
 
 | Thành phần | Vai trò | Ghi chú cho tổng đài |
 | :--- | :--- | :--- |
@@ -60,7 +73,13 @@ graph TD
 
 ## T2 — Hai trường phái kiến trúc: Cascade và S2S
 
-- **Câu chuyện**: cùng một bài toán có hai cách dựng. Tổng đài tài chính hiện chọn Cascade vì kiểm soát nghiệp vụ và an toàn tốt hơn, đổi lại phải tự ghép turn-taking bên ngoài.
+- **Dẫn dắt bối cảnh**:
+  - Tồn tại hai phương pháp thiết kế hệ thống Voice Agent chính.
+  - Mô hình Cascade thực hiện tách biệt các lớp xử lý tuần tự.
+  - Mô hình Speech-to-Speech (S2S) xử lý end-to-end trực tiếp.
+  - Hệ thống tổng đài tài chính hiện tại ưu tiên lựa chọn mô hình Cascade.
+  - Giúp kiểm soát chặt chẽ nghiệp vụ và đảm bảo an toàn thông tin.
+  - Đánh đổi bằng việc phải tự tích hợp và tối ưu module turn-taking từ bên ngoài.
 
 ```mermaid
 graph TD
@@ -71,8 +90,6 @@ graph TD
   C1 --> OUT["Âm thanh phản hồi"]
   S1 --> OUT
 ```
-
-- **Bảng chú giải thành phần**:
 
 | Trục so sánh | Cascade (đang dùng) | S2S end-to-end |
 | :--- | :--- | :--- |
@@ -86,7 +103,10 @@ graph TD
 
 ## T3 — Kiến trúc 4 lớp của FCI (bản hiểu, cần FCI xác nhận)
 
-- **Câu chuyện**: đây là cách team **hiểu lại** kiến trúc cascade 4 lớp của FCI từ sơ đồ và mẫu dữ liệu. Đưa ra để FCI **xác nhận hoặc sửa** từng khối.
+- **Dẫn dắt bối cảnh**:
+  - Khái quát lại mô hình kiến trúc Cascade 4 lớp của đối tác FCI.
+  - Xây dựng dựa trên tài liệu sơ đồ tổng quát và phân tích mẫu dữ liệu.
+  - Đưa ra làm khung thảo luận để đối tác xác nhận hoặc hiệu chỉnh chi tiết.
 
 ```mermaid
 graph TD
@@ -98,8 +118,6 @@ graph TD
   L1 -->|"vi phạm rails"| FB["Fallback: câu thoại an toàn mẫu"]
   FB --> TTSOUT
 ```
-
-- **Bảng chú giải thành phần**:
 
 | Lớp | Nhiệm vụ chính | Cơ chế đặc trưng (cần FCI xác nhận) |
 | :--- | :--- | :--- |
@@ -113,7 +131,11 @@ graph TD
 
 ## T4 — Triết lý phễu đa tầng (multi-solution-stack)
 
-- **Câu chuyện**: khung tư duy áp cho **mọi** tác vụ con. Ca dễ giải ở tầng rẻ, chỉ ca khó mới đẩy lên model đắt. Mục tiêu là giữ latency thấp mà không hy sinh độ chính xác ca khó.
+- **Dẫn dắt bối cảnh**:
+  - Áp dụng triết lý phễu lọc cho mọi tác vụ con trong hệ thống.
+  - Ưu tiên giải quyết các trường hợp đơn giản tại tầng xử lý chi phí thấp.
+  - Chỉ chuyển tiếp các ca phức tạp lên các mô hình học sâu lớn và đắt đỏ.
+  - Hướng tới mục tiêu tối ưu hóa độ trễ (latency) toàn trình mà vẫn bảo đảm chất lượng.
 
 ```mermaid
 graph TD
@@ -124,8 +146,6 @@ graph TD
   T2 -->|"tự tin thấp"| T3["Tầng 3: model lớn, trăm ms"]
   T3 --> DONE
 ```
-
-- **Bảng chú giải thành phần** (ví dụ áp cho từng tác vụ):
 
 | Tác vụ | Tầng 1 rule | Tầng 2 model nhỏ | Tầng 3 model lớn |
 | :--- | :--- | :--- | :--- |
@@ -138,7 +158,11 @@ graph TD
 
 ## T5 — Zoom-in front-end âm thanh và chốt chặn tách giọng
 
-- **Câu chuyện**: đây là component quan trọng nhất và cũng là **chốt chặn thật** của bài toán. Trước khi hiểu được lời, phải tách đúng **giọng khách mục tiêu** khỏi nhiễu, người bên cạnh, tiếng TV và echo của chính bot.
+- **Dẫn dắt bối cảnh**:
+  - Bộ phận tiền xử lý âm thanh đóng vai trò là chốt chặn quan trọng nhất.
+  - Nhiệm vụ cốt lõi là tách biệt giọng nói của khách hàng mục tiêu.
+  - Cần loại bỏ triệt để nhiễu nền, tiếng người xung quanh và echo từ chính loa bot.
+  - Là tiền đề quyết định chất lượng cho các bước nhận dạng và suy luận phía sau.
 
 ```mermaid
 graph TD
@@ -148,8 +172,6 @@ graph TD
   VAD --> EOU["Turn-detection EOU và barge-in"]
   EOU --> ASROUT["Đẩy xuống ASR và Agent lõi"]
 ```
-
-- **Bảng chú giải thành phần**:
 
 | Thành phần | Vai trò | Điểm cần lưu ý |
 | :--- | :--- | :--- |
@@ -163,7 +185,10 @@ graph TD
 
 ## T6 — Turn-taking: ba bài toán con
 
-- **Câu chuyện**: "quản lý lượt lời" không phải một bài toán mà là ba, kích hoạt ở các thời điểm khác nhau. Gộp chung là nguồn gốc nhiều lỗi.
+- **Dẫn dắt bối cảnh**:
+  - Quản lý lượt lời (turn-taking) bao gồm ba bài toán con độc lập.
+  - Mỗi bài toán được kích hoạt tại các thời điểm và ngữ cảnh khác nhau.
+  - Việc gộp chung các bài toán này là nguyên nhân chính dẫn đến lỗi logic hội thoại.
 
 ```mermaid
 graph TD
@@ -174,8 +199,6 @@ graph TD
   EOU --> R1["Xong thì trả lời, chưa thì tiếp tục nghe"]
   BI --> R2["Ngắt thật thì dừng TTS, tiếng đệm thì nói tiếp"]
 ```
-
-- **Bảng chú giải thành phần**:
 
 | Bài toán con | Câu hỏi cốt lõi | Thời điểm kích hoạt | Cách đo |
 | :--- | :--- | :--- | :--- |
@@ -188,7 +211,11 @@ graph TD
 
 ## T7 — Bản chất ngắt lời: sáu chiều và vì sao word-check sập
 
-- **Câu chuyện**: một sự kiện chen tiếng không phải nhị phân phẳng, nó là toạ độ trong **không gian 6 chiều**. Bộ so khớp từ khoá (word-check) chỉ nhìn được nhánh bề mặt nên sập ở ca khó.
+- **Dẫn dắt bối cảnh**:
+  - Hành vi khách chen ngang cuộc gọi là một thực thể đa chiều.
+  - Được mô tả chi tiết bằng hệ tọa độ không gian 6 chiều khác nhau.
+  - Giải pháp so khớp từ khóa (word-check) truyền thống chỉ nhận diện được lớp bề mặt.
+  - Dẫn đến việc hệ thống dễ dàng bị sập hoặc xử lý sai ở các ca phức tạp.
 
 ```mermaid
 graph TD
@@ -200,8 +227,6 @@ graph TD
   SURF -->|"word-check chỉ thấy nhánh này"| DEC
 ```
 
-- **Bảng chú giải thành phần**:
-
 | Chiều | Câu hỏi | Thấy được từ text thuần? |
 | :--- | :--- | :--- |
 | **D1 — Nguồn phát** | Âm này từ đâu (khách, người bên cạnh, TV, echo)? | Một phần, cần diarization |
@@ -211,13 +236,23 @@ graph TD
 | **D5 — Ngữ cảnh hội thoại** | Bot đang hỏi slot hay đọc đoạn dài? | **Không**, cần dialog-state |
 | **D6 — Độ tin cậy** | Tín hiệu và nhãn có đáng tin? | **Không**, cần confidence |
 
-- **Chốt**: ba chiều quyết định nhãn (D2, D5, D6) đều **không** thấy từ text thuần. Ví dụ kinh điển: từ **"vâng"** — khi bot đọc đoạn dài là backchannel (HOLD), ngay sau khi bot hỏi "anh đồng ý chứ?" lại là câu trả lời (INTERRUPT). Đòn bẩy rẻ nhất là bơm **D5 dialog-state** vào bộ quyết định.
+- **Kết luận rút ra**:
+  - Ba chiều thông tin cốt lõi quyết định nhãn (D2, D5, D6) không xuất hiện trong văn bản thuần.
+  - **Ví dụ phân tích từ khóa "Vâng"**:
+    - Khi bot đang đọc một đoạn thông tin dài: Từ này đóng vai trò là tiếng đệm (HOLD).
+    - Ngay sau khi bot đặt câu hỏi xác nhận: Từ này chuyển thành câu trả lời trực tiếp (INTERRUPT).
+  - **Đề xuất giải pháp**:
+    - Sử dụng đòn bẩy chi phí thấp nhất là tích hợp trạng thái hội thoại (D5 dialog-state) vào bộ ra quyết định.
 
 ---
 
 ## T8 — Phễu ba tầng cho barge-in dưới ngân sách 150ms
 
-- **Câu chuyện**: dùng model LLM 7B để quyết ngắt lời tốn ~280ms, **chắc chắn vỡ** ngân sách ≤150ms. Giải pháp là phễu: xử nhanh ca rõ ở tầng thấp, chỉ đẩy ca khó lên LLM.
+- **Dẫn dắt bối cảnh**:
+  - Việc lạm dụng mô hình LLM lớn để phân tích chen ngang sẽ gây trễ lớn (~280ms).
+  - Làm phá vỡ ngân sách độ trễ nghiêm ngặt của hệ thống (≤150ms).
+  - Giải pháp tối ưu là xây dựng phễu lọc ba tầng để phân bổ tài nguyên hợp lý.
+  - Ca dễ được xử lý tức thì, ca phức tạp mới chuyển tiếp lên mô hình lớn hơn.
 
 ```mermaid
 graph TD
@@ -228,8 +263,6 @@ graph TD
   L2 -->|"tự tin thấp"| L3["Tầng 3: LLM 7B, khoảng 280ms"]
   L3 --> D3["Quyết định cuối cùng"]
 ```
-
-- **Bảng chú giải thành phần**:
 
 | Tầng | Công cụ | Độ trễ | Bản quyền / lưu ý |
 | :--- | :--- | :--- | :--- |
@@ -242,7 +275,11 @@ graph TD
 
 ## T9 — Tool-calling: simulated tool và two-pass
 
-- **Câu chuyện**: điểm đau #2. Bot dễ chọn sai hàm, điền sai tham số, hoặc bịa số liệu. Hai cơ chế FCI dùng: chèn hàm giả để bám kịch bản, và two-pass để ép lấy số thật.
+- **Dẫn dắt bối cảnh**:
+  - Phân tích sâu điểm đau cốt lõi thứ hai liên quan đến gọi công cụ (tool-calling).
+  - Khắc phục các lỗi phổ biến như chọn sai hàm, điền sai tham số hoặc bịa số liệu.
+  - Ứng dụng cơ chế gọi hàm giả (simulated tool) để bot tuân thủ kịch bản.
+  - Sử dụng cơ chế suy luận hai lượt (two-pass) để ép buộc câu trả lời bám sát dữ liệu thật.
 
 ```mermaid
 graph TD
@@ -253,8 +290,6 @@ graph TD
   ENR --> RE["Huỷ phản hồi cũ, LLM sinh lại theo số liệu thật"]
   RE --> OUT["Đẩy xuống guardrail đầu ra"]
 ```
-
-- **Bảng chú giải thành phần**:
 
 | Thành phần | Vai trò | Đánh đổi |
 | :--- | :--- | :--- |
@@ -267,7 +302,11 @@ graph TD
 
 ## T10 — Ba tầng chất lượng tool-call và XGrammar
 
-- **Câu chuyện**: khoảng cách 62% → 90% không nằm ở định dạng JSON. Phải tách lỗi làm ba tầng để biết vá chỗ nào; XGrammar chỉ vá tầng cú pháp.
+- **Dẫn dắt bối cảnh**:
+  - Khoảng cách cải thiện hiệu suất gọi hàm không nằm ở việc định dạng JSON.
+  - Cần phân tách lỗi cuộc gọi thành ba tầng chất lượng độc lập để định vị nguồn lỗi.
+  - Sử dụng XGrammar chỉ giải quyết được các lỗi liên quan đến định dạng cú pháp JSON.
+  - Cần các biện pháp bổ trợ để khắc phục lỗi logic nghiệp vụ và dữ liệu thực tế.
 
 ```mermaid
 graph TD
@@ -279,8 +318,6 @@ graph TD
   XG --> NOTE["Chỉ ép đúng format JSON, không cứu lỗi logic"]
 ```
 
-- **Bảng chú giải thành phần**:
-
 | Tầng chất lượng | Loại lỗi | Công cụ vá |
 | :--- | :--- | :--- |
 | **Tầng A — Quyết gọi** | Gọi tool khi không cần, hoặc quên gọi | Prompt, intent classifier |
@@ -288,13 +325,19 @@ graph TD
 | **Tầng C — Grounding giá trị** | Điền đúng cú pháp nhưng sai giá trị thực tế | Cần dữ liệu, RAG, model tốt hơn |
 | **BFCL V4 harness** | Đo lường tách lỗi | So khớp cây cú pháp (AST) để biết % lỗi format vs lỗi logic |
 
-- **Chốt**: phần lớn thiếu hụt 28% nằm ở **Tầng B–C (logic và giá trị)**, không phải format. Ưu tiên đo bằng BFCL trước khi bật XGrammar.
+- **Kết luận rút ra**:
+  - Phần lớn khoảng cách thiếu hụt 28% hiệu năng thuộc về **Tầng B–C (logic và giá trị)**.
+  - Không nằm ở vấn đề định dạng cú pháp JSON.
+  - Khuyến nghị ưu tiên đo lường và đánh giá bằng hệ thống BFCL trước khi cấu hình XGrammar.
 
 ---
 
 ## T11 — Build-vs-Buy: Krisp (mua) và open-source (tự xây)
 
-- **Câu chuyện**: chốt chặn "tách giọng mục tiêu dưới nhiễu" là chỗ khó nhất. Có hai hướng: mua SDK thương mại Krisp, hoặc tự xây theo blueprint. Quyết theo khả thi × hiệu quả × chi phí.
+- **Dẫn dắt bối cảnh**:
+  - Lựa chọn phương án triển khai module tách giọng khách hàng mục tiêu.
+  - So sánh giữa việc tích hợp bộ SDK thương mại từ đối tác Krisp và tự phát triển.
+  - Quyết định dựa trên tích số của ba yếu tố: tính khả thi, hiệu quả thực tế và chi phí dài hạn.
 
 ```mermaid
 graph TD
@@ -306,8 +349,6 @@ graph TD
   BC2 --> DEC
 ```
 
-- **Bảng chú giải thành phần**:
-
 | Hướng | Đại diện | Ưu | Nhược |
 | :--- | :--- | :--- | :--- |
 | **Mua — Krisp** | VIVA SDK (Voice Isolation, Turn/Interruption Prediction, VAD) | Dẫn đầu thương mại, bundle sẵn các module | Giá SDK **quote-based** không công khai; chỉ Voice Translation API có giá công khai (~$0.09–0.12/phút *tham chiếu độ lớn*) |
@@ -315,29 +356,46 @@ graph TD
 | **OSS thành phần đã chín** | Silero VAD (MIT, 8kHz), Smart Turn v3 (BSD-2, có vi) | Dùng được ngay cho VAD và EOU | Không giải được phần tách giọng mục tiêu |
 | **OSS còn kẹt** | SpeakerBeam (eval-only), USEF-TSE (CC-BY-NC), WeSep (no license) | Ý tưởng tốt | License chặn thương mại hoặc chưa realtime |
 
-- **Chốt**: VAD và EOU dùng OSS sạch license; **chốt chặn tách giọng thì hoặc mua Krisp hoặc tự xây theo blueprint** — đây là quyết định lớn cần cân với FCI.
+- **Kết luận rút ra**:
+  - Đối với VAD và EOU: Ưu tiên sử dụng các mã nguồn mở sạch về mặt bản quyền.
+  - Đối với chốt chặn tách giọng: Lựa chọn mua sản phẩm thương mại Krisp hoặc tự xây dựng theo blueprint của Google.
+  - Đây là một quyết định chiến lược lớn cần được thảo luận kỹ lưỡng và thống nhất với đối tác FCI.
 
 ---
 
 ## ✅ Tự kiểm nhanh
 
 <details>
-<summary>1. Vì sao tổng đài tài chính chọn Cascade thay vì S2S dù S2S trễ thấp hơn?</summary>
+<summary>1. Vì sao tổng đài tài chính lựa chọn kiến trúc Cascade thay vì Speech-to-Speech (S2S)?</summary>
 
-- Cascade cho phép **tách lớp guardrail** (chặn injection, che PII, đối chiếu số liệu) và **kiểm soát tool-calling** chặt chẽ — hai yêu cầu bắt buộc của nghiệp vụ tài chính.
-- S2S nhét logic vào trọng số model nên khó chèn luật và chưa có cơ chế an toàn PII đồng bộ.
+- **Khả năng kiểm soát an toàn**:
+  - Cascade cho phép tích hợp các lớp bảo vệ (guardrail) tách biệt.
+  - Giúp dễ dàng ngăn chặn prompt injection, che thông tin nhạy cảm (PII) và đối chiếu số liệu.
+- **Ràng buộc nghiệp vụ**:
+  - Đảm bảo kiểm soát gọi công cụ (tool-calling) chính xác và đáng tin cậy.
+  - Phù hợp với các tiêu chuẩn khắt khe trong lĩnh vực tài chính.
+- **Hạn chế của mô hình Speech-to-Speech**:
+  - Gom toàn bộ logic xử lý vào trong trọng số model nên cực kỳ khó chèn luật.
+  - Chưa cung cấp cơ chế bảo đảm an toàn dữ liệu đồng bộ.
 </details>
 
 <details>
-<summary>2. Đâu là "chốt chặn thật" của bài toán ngắt lời, và vì sao không nằm ở tầng turn-detection?</summary>
+<summary>2. Đâu là chốt chặn thực sự của bài toán ngắt lời (barge-in)?</summary>
 
-- Chốt chặn thật nằm **sớm hơn**, ở tầng **tách giọng mục tiêu (target-speaker) trong front-end âm thanh**.
-- Nếu không tách đúng giọng khách khỏi nhiễu, người bên cạnh, TV và echo, thì mọi phân tích ý định phía sau (turn-detection) đều dựa trên tín hiệu sai (chiều D1).
+- **Vị trí của chốt chặn**:
+  - Nằm ở tầng tiền xử lý âm thanh (front-end) để **tách giọng khách hàng mục tiêu (target-speaker)**.
+- **Hệ quả của việc xử lý sai**:
+  - Nếu tín hiệu vào bị lẫn nhiễu, tiếng TV hoặc echo thì mọi suy luận phía sau đều dựa trên dữ liệu sai.
+  - Turn-detection ở các bước sau sẽ không thể đưa ra quyết định chính xác nếu đầu vào bị hỏng.
 </details>
 
 <details>
-<summary>3. XGrammar có đủ để đưa tool-calling từ 62% lên 90% không?</summary>
+<summary>3. Sử dụng XGrammar có đủ nâng hiệu suất gọi công cụ từ 62% lên 90% không?</summary>
 
-- Không. XGrammar chỉ ép **đúng định dạng JSON** (Tầng B cú pháp), tiệm cận 100% về format.
-- Phần lớn khoảng cách nằm ở **Tầng B–C logic và giá trị** (chọn sai hàm, điền sai giá trị) — phải vá bằng prompt, dữ liệu và model tốt hơn, đo tách lỗi bằng BFCL trước.
+- **Phạm vi tác động của XGrammar**:
+  - Chỉ hỗ trợ ràng buộc cú pháp đầu ra để bảo đảm **định dạng JSON chính xác** (Tầng B).
+- **Nguyên nhân chính gây lỗi**:
+  - Phần lớn lỗi nằm ở Tầng A (quyết định gọi tool) và Tầng C (giá trị tham số thực tế).
+  - Đòi hỏi các cải tiến về prompt, chất lượng dữ liệu RAG và năng lực mô hình ngôn ngữ.
+  - Khuyến nghị đo đạc kỹ lưỡng bằng công cụ BFCL trước khi tiến hành tối ưu cú pháp.
 </details>
