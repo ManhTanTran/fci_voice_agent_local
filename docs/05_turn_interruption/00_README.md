@@ -5,6 +5,9 @@
 > - **tập trung giải quyết tình trạng ngắt lời (barge-in)** và phân biệt phản hồi đệm (backchannel) dưới ngân sách latency nghiêm ngặt.
 > - Tham chiếu chi tiết về phân rã kịch bản ngắt lời và lỗi word-check xem tại [01_interrupt_taxonomy.md](01_interrupt_taxonomy.md),
 > - và phân tích các mô hình turn-detection cùng xử lý tiền xử lý âm thanh xem tại [02_turn_models_and_voice_frontend.md](02_turn_models_and_voice_frontend.md).
+> - Ba tài liệu đào sâu bài toán con (bổ sung 2026-07): [05_target_speaker_isolation.md](05_target_speaker_isolation.md) (bóc tách giọng chính, enrollment call-center),
+> - [06_eou_endpointing.md](06_eou_endpointing.md) (xác định kết thúc lượt nói, context-conditioned theo FSM node),
+> - và [07_bargein_decision.md](07_bargein_decision.md) (quyết định barge-in 2 pha pause-and-confirm + lớp vật lý echo/double-talk).
 
 ---
 

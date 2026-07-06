@@ -3,6 +3,8 @@
 > [!NOTE]
 > Tài liệu này thuộc chặng đầu tiên trong mô hình cascade 4 lớp (ASR $\rightarrow$ Input Guardrails $\rightarrow$ Orchestrator/LLM $\rightarrow$ Output Guardrails $\rightarrow$ TTS).
 > Trọng tâm chính là tối ưu hóa chất lượng nhận dạng giọng nói (ASR) trong các điều kiện thực tế của mạng lưới viễn thông viễn thông (narrowband 8kHz, nhiễu nền, chồng tiếng, realtime) và thiết lập tín hiệu độ tin cậy (confidence score) phục vụ cơ chế fallback.
+>
+> Phần mở rộng của mục 6 — chuỗi mức nhiễu runtime $\rightarrow$ confidence transcript $\rightarrow$ chính sách hỏi lại / xác minh thông tin — xem tại [01_confidence_clarification.md](01_confidence_clarification.md) (bổ sung 2026-07).
 
 ---
 

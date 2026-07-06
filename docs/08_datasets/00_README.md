@@ -2,6 +2,10 @@
 
 > [!NOTE]
 > Tài liệu này liệt kê và quản lý các tập dữ liệu (datasets) phục vụ quá trình đánh giá hiệu năng (benchmarking) và huấn luyện các mô hình thành phần trong hệ thống voice-bot.
+>
+> Ba tài liệu phương pháp đi kèm (bổ sung 2026-07): [01_eda_methodology.md](01_eda_methodology.md) (EDA 3 lớp audio → transcript → log hệ thống),
+> [02_sim_to_real_data.md](02_sim_to_real_data.md) (tạo dữ liệu sim bổ trợ real-data theo kịch bản kiểm thử),
+> và [03_training_recipes.md](03_training_recipes.md) (đặc thù training từng loại model trong hệ voice-agent).
 
 ---
 
