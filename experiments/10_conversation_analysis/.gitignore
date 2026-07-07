@@ -1,0 +1,4 @@
+# dossier tho chua transcript chua an so (PII) + audio clip -> khong commit
+out/
+__pycache__/
+*.pyc
