@@ -66,9 +66,16 @@ def main():
     ap.add_argument("--out", required=True, help="thu muc goc; dossier ghi vao <out>/<stt>/")
     ap.add_argument("--stt", default="fastconformer",
                     choices=["fastconformer", "chunkformer", "parakeet"])
+    ap.add_argument("--device", default="cpu", choices=["cpu", "cuda"],
+                    help="device TUONG MINH: cpu (mac dinh, ke ca may co GPU yeu) | cuda (may GPU that vd DGX)")
     ap.add_argument("--no-asr", action="store_true", help="bo qua ASR (chi test phan tin hieu)")
     ap.add_argument("--limit", type=int, default=0)
     args = ap.parse_args()
+
+    # Khi chon CPU: an GPU khoi tien trinh TRUOC KHI bat ky lib nao import torch,
+    # de cac lib (nemo/chunkformer) khong tu vo GPU (vd GPU local cu/yeu -> tranh OOM).
+    if args.device == "cpu":
+        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
     outdir = os.path.join(args.out, args.stt)   # moi model 1 thu muc rieng, khong de nhau
     os.makedirs(outdir, exist_ok=True)
@@ -83,9 +90,9 @@ def main():
     asr = None
     if not args.no_asr:
         from pipeline.backends import get_asr
-        print(f"[run] nap model STT '{args.stt}' ...", file=sys.stderr, flush=True)
+        print(f"[run] nap model STT '{args.stt}' device={args.device} ...", file=sys.stderr, flush=True)
         t0 = time.perf_counter()
-        asr = get_asr(args.stt)
+        asr = get_asr(args.stt, device=args.device)
         print(f"[run] STT '{args.stt}' san sang device={asr.device} ({time.perf_counter()-t0:.1f}s)",
               file=sys.stderr, flush=True)
 

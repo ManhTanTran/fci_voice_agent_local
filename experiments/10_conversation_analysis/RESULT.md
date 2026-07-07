@@ -62,6 +62,29 @@ Mỗi model lưu hồ sơ riêng `out/<model>/`, viewer ghép theo `(speaker, t_
 
 ---
 
+## 4b. Review chất lượng STT trên data FPT (2026-07-07, đo trên 1483 lượt / 36 cuộc)
+
+Không có ground-truth → so 3 model chéo nhau + suy luận theo tính hợp lý. Số đo bằng script trên `out/`.
+
+**Đặc điểm loại dataset (insight):**
+- **CSKH ngân hàng qua tổng đài, 8kHz 2 kênh.** Nội dung xoay quanh xác minh danh tính: **đọc/đọc-lại chuỗi số** (căn cước, số điện thoại, thẻ). Có **155 lượt chứa ≥3 từ chữ số** — đây vừa là nội dung *quan trọng nhất* vừa *khó nhất*.
+- **~30% ứng viên barge-in là NON-SPEECH** (echo bot rò kênh, tiếng thở, VAD bắt nhầm): cả 3 model đồng thuận rỗng ~30% (fast 31% · chunk 33% · para 29%). Khớp nhận định "VAD over-trigger" ở §1.
+- Barge-in điển hình = **khách đọc lại/sửa số khi bot đọc nhầm** (đúng điểm đau); overlap có AGC telephony nén khách nhỏ (`sir` âm sâu).
+
+**Cảm quan model tốt nhất: Parakeet CTC 0.6B** (rồi ChunkFormer, cuối là FastConformer):
+- Chuỗi số **sạch nhất**: không token OOV, không gom số sai. Có dấu câu + viết hoa → gần văn bản, dễ đọc.
+- ⚠️ **Mặt trái:** phun **mảnh rác ở 197 lượt** (`"."`, `"Đ."`, âm tiết cụt `"d ây k."`) trên đoạn non-speech mà 2 model CTC đúng khi để rỗng → **cần lọc hậu kỳ** (bỏ lượt chỉ có dấu câu / độ dài < ngưỡng). "Rỗng thấp 15%" ban đầu là ảo do đếm nhầm `"."` là có chữ.
+- **ChunkFormer:** nhiều chữ nhất (9943 từ), đọc 8kHz tốt, **nhưng gom số thành số-đếm** — chèn nhầm `nghìn/trăm/linh` vào chuỗi ID ở **93 lượt** (vd `"sáu bảy nghìn tám"` thay vì đọc rời `"sáu bảy tám"`). Sai cho bài toán đọc-số-ID.
+
+**FastConformer (bản cũ của Kỳ) dở điểm gì — và improve được không:**
+- **Lỗi chí mạng: phun ký tự OOV `⁇` ở 47% lượt có chuỗi số** (73/155 lượt; tổng 134 ký tự `⁇` trên 76 lượt) — mất hẳn dãy số, đúng phần nội dung quan trọng nhất. Ví dụ: bot đọc lại căn cước → FastConformer ra `"...của chị là ⁇ 4 năm ⁇"` (chỉ vớt được `"4 năm"`), trong khi Chunk/Parakeet ra đủ dãy số.
+- Nguyên nhân (giả thuyết, cần xác nhận): (1) **train 16kHz, chạy 8kHz telephony** narrowband → mất phần cao tần phân biệt số đọc nhanh; (2) thiếu data **chuỗi số đọc liền (connected digits)** trong tập train; (3) tokenizer/vocab phun OOV khi acoustic bí thay vì đoán số.
+- **CÓ thể improve** — và đúng hướng cả exp đang xây: **fine-tune trên chính data 8kHz telephony FCI + augment chuỗi số đọc rời**; kiểm tra vocab có đủ token số. Đây là bằng chứng số cụ thể để xin data readback-số từ FCI (bổ sung §3.3 doc request).
+
+> Script đo: chạy trực tiếp trên `out/<model>/*.json` (đếm `⁇`, lượt số ≥3, mảnh rác, rỗng-sau-lọc). Con số ở trên tái lập được.
+
+---
+
 ## 5. Còn lại
 
 - Chờ Kỳ review logic tất định (nhất là định nghĩa ứng viên, đặc trưng, cách đo `bot_stopped`).

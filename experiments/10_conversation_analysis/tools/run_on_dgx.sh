@@ -31,9 +31,9 @@ rsync -az --delete "$LOCAL_ROOT/$EXP/pipeline"  "dgx:$WORK/"
 rsync -az "$LOCAL_ROOT/data/audio_interrupt"    "dgx:$WORK/data/"
 
 echo "[3] chay STT '$STT' tren GPU DGX (project $PROJ) ..."
-# Parakeet doc FCI_ASR_GPU=1 de dung GPU.
-ssh dgx "cd '$WORK' && FCI_ASR_GPU=1 HF_HOME=/srv/team-share/cache/hf uv run --project '$PROJ' \
-    python pipeline/run.py --audio-dir data/audio_interrupt --out out --stt $STT"
+# DGX = may server co GPU that -> truyen --device cuda TUONG MINH (khong auto-detect).
+ssh dgx "cd '$WORK' && HF_HOME=/srv/team-share/cache/hf uv run --project '$PROJ' \
+    python pipeline/run.py --audio-dir data/audio_interrupt --out out --stt $STT --device cuda"
 
 echo "[4] keo dossier ve local -> out/$STT/ ..."
 mkdir -p "$LOCAL_ROOT/$EXP/out/$STT"

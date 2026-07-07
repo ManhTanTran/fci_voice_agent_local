@@ -19,6 +19,25 @@ import soundfile as sf
 ASR_SR = 16000
 
 
+def _resolve_device(device):
+    """Device la THAM SO TUONG MINH (cpu|cuda) do nguoi van hanh truyen vao — default cpu.
+    KHONG dung torch.cuda.is_available() lam CONG TAC chon device: may co the co GPU
+    yeu/ban ma van muon chay CPU. is_available() chi de VALIDATE yeu cau 'cuda' (thieu GPU -> bao loi ro).
+    Khi chon 'cpu', run.py da set CUDA_VISIBLE_DEVICES=-1 truoc khi import torch de lib khong tu vo GPU."""
+    import torch
+    dev = (device or "cpu").lower()
+    if dev == "cuda":
+        if not torch.cuda.is_available():
+            raise RuntimeError(
+                "Yeu cau --device cuda nhung torch.cuda.is_available()=False. "
+                "Kiem: (1) may co GPU dung duoc khong; (2) da cai ban torch CUDA-build (torch+cuXXX) chua "
+                "(ban torch+cpu khong the dung GPU).")
+        return "cuda"
+    if dev != "cpu":
+        raise ValueError(f"device khong hop le: {device!r} (chi 'cpu' | 'cuda')")
+    return "cpu"
+
+
 def _clips_16k(wav_8k, segs):
     """Cat cac doan -> list array 16k float32 (Whisper/HF can 16k)."""
     from scipy.signal import resample_poly
@@ -34,20 +53,20 @@ class FastConformerASR:
     name = "fastconformer"
     REPO, FILE = "kyle/vi-asr-fastconformer-114m", "s3-fc115m-full.nemo"
 
-    def __init__(self):
-        import torch, nemo.collections.asr as nemo_asr
+    def __init__(self, device="cpu"):
+        import nemo.collections.asr as nemo_asr
         from nemo.utils import logging as nlog
         nlog.set_verbosity(nlog.ERROR)
+        dev = _resolve_device(device)   # device tuong minh, khong auto-detect
         path = os.environ.get("FCI_ASR_NEMO")
         if not (path and os.path.isfile(path)):
             from huggingface_hub import hf_hub_download
             path = hf_hub_download(self.REPO, self.FILE)
-        cuda = torch.cuda.is_available()
-        self.model = nemo_asr.models.ASRModel.restore_from(path, map_location="cuda" if cuda else "cpu")
-        if cuda:
+        self.model = nemo_asr.models.ASRModel.restore_from(path, map_location=dev)
+        if dev == "cuda":
             self.model = self.model.cuda()
         self.model.eval()
-        self.device = "cuda" if cuda else "cpu"
+        self.device = dev
 
     def transcribe_segments(self, wav_8k, segs, batch=16):
         if not segs:
@@ -87,12 +106,14 @@ class ChunkFormerASR:
     name = "chunkformer"
     REPO = "khanhld/chunkformer-ctc-large-vie"   # ban CTC long-form, RTF ~0.06 tren CPU
 
-    def __init__(self):
+    def __init__(self, device="cpu"):
         from chunkformer import ChunkFormerModel  # package chunkformer>=1.2
-        # LUON CPU: ChunkFormer CTC da RTF~0.06 tren CPU; GPU local (Quadro M1000M 2GB) khong dung duoc.
-        # Khong goi .cuda() o day de tranh OutOfMemory.
+        dev = _resolve_device(device)   # device tuong minh; khi 'cpu' run.py da an GPU (CUDA_VISIBLE_DEVICES=-1)
+        # nen package khong tu vo GPU. ChunkFormer CTC da RTF~0.06 tren CPU nen mac dinh cpu.
         self.model = ChunkFormerModel.from_pretrained(self.REPO)
-        self.device = "cpu"
+        if dev == "cuda":
+            self.model.model = self.model.model.cuda()   # best-effort: dat mang len GPU khi duoc yeu cau ro
+        self.device = dev
 
     def transcribe_segments(self, wav_8k, segs, batch=1):
         """Long-form: decode CA KENH 1 lan (co timestamp) roi map ve tung VAD segment.
@@ -126,17 +147,16 @@ class ParakeetASR:
     name = "parakeet"
     REPO, FILE = "nvidia/parakeet-ctc-0.6b-Vietnamese", "parakeet-ctc-0.6b-vi.nemo"
 
-    def __init__(self):
-        import torch, nemo.collections.asr as nemo_asr
+    def __init__(self, device="cpu"):
+        import nemo.collections.asr as nemo_asr
         from nemo.utils import logging as nlog
         nlog.set_verbosity(nlog.ERROR)
+        dev = _resolve_device(device)   # device tuong minh (vd DGX: --device cuda)
         # Repo HF chi chua file .nemo -> tai roi restore_from (from_pretrained loi thieu model_config.yaml).
         from huggingface_hub import hf_hub_download
         path = hf_hub_download(self.REPO, self.FILE)
-        cuda = torch.cuda.is_available() and os.environ.get("FCI_ASR_GPU") == "1"
-        dev = "cuda" if cuda else "cpu"
         self.model = nemo_asr.models.ASRModel.restore_from(path, map_location=dev)
-        if cuda:
+        if dev == "cuda":
             self.model = self.model.cuda()
         self.model.eval()
         self.device = dev
@@ -156,7 +176,8 @@ class ParakeetASR:
         return [_nemo_text(x) for x in out]
 
 
-def get_asr(name: str):
+def get_asr(name: str, device: str = "cpu"):
+    """device tuong minh ('cpu'|'cuda') truyen xuong moi backend — KHONG auto-detect."""
     return {"fastconformer": FastConformerASR,
             "chunkformer": ChunkFormerASR,
-            "parakeet": ParakeetASR}[name]()
+            "parakeet": ParakeetASR}[name](device=device)
