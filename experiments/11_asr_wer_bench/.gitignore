@@ -1,0 +1,4 @@
+# kết quả benchmark sinh trên DGX (results.json, table.md, log) — không commit, sinh lại bằng run_bench.py
+out/
+__pycache__/
+*.pyc
