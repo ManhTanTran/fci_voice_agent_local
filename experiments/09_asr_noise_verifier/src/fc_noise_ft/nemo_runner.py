@@ -55,7 +55,36 @@ def hyp_to_text(item) -> str:
     return str(item)
 
 
+def patch_inference_config(model, batch_size: int) -> None:
+    cfg = None
+    if hasattr(model, "cfg") and hasattr(model.cfg, "test_ds"):
+        cfg = OmegaConf.to_container(model.cfg.test_ds, resolve=True)
+    elif hasattr(model, "cfg") and hasattr(model.cfg, "validation_ds"):
+        cfg = OmegaConf.to_container(model.cfg.validation_ds, resolve=True)
+
+    if not isinstance(cfg, dict):
+        return
+
+    cfg.pop("use_start_end_token", None)
+    cfg.update(
+        {
+            "sample_rate": TARGET_SR,
+            "batch_size": batch_size,
+            "shuffle": False,
+            "num_workers": 2,
+            "pin_memory": True,
+            "pretokenize": False,
+        }
+    )
+
+    try:
+        model.setup_test_data(test_data_config=cfg)
+    except Exception:
+        pass
+
+
 def transcribe_paths(model, paths: list[str], batch_size: int) -> list[str]:
+    patch_inference_config(model, batch_size)
     try:
         out = model.transcribe(paths, batch_size=batch_size, return_hypotheses=False)
     except TypeError:
