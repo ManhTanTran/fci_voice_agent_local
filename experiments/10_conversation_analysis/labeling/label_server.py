@@ -44,6 +44,14 @@ GROUPS = [
 ]
 
 _AUDIO_CACHE: dict[str, tuple] = {}
+_BOTCH: dict[str, int] = {}
+
+
+def bot_ch_of(cid):
+    if cid not in _BOTCH:
+        j = json.load(open(os.path.join(OUT_DIR, DEFAULT_MODEL, cid + ".json"), encoding="utf-8"))
+        _BOTCH[cid] = j.get("bot_ch", 0)
+    return _BOTCH[cid]
 
 
 # ---------------- data ----------------
@@ -79,6 +87,24 @@ def has_digit(text, k=2):
     return best >= k
 
 
+# tiếng đế báo đang nghe, không mang nội dung -> không đo WER
+BACKCHANNEL = set("dạ vâng ừ ừm à ạ ờ ừa ừm ạ alo lô ok okê okê okey đúng hử ừhử vầng".split())
+
+
+def suggest_kind(text, dur, digit):
+    """Gợi ý phân loại để lướt nhanh: content cần gõ, backchannel/skip không cần.
+    Chỉ auto CHẮC CHẮN; ca mơ hồ để 'content' cho người quyết, tránh loại nhầm nội dung thật."""
+    if digit:
+        return "content"
+    t = text.strip().lower()
+    ws = t.split()
+    if not ws or t in (".", "—", ""):
+        return "skip"                                   # rỗng / non-speech
+    if len(ws) <= 2 and (dur < 0.9 or all(w in BACKCHANNEL for w in ws)):
+        return "backchannel"                            # đế ngắn, rõ ràng
+    return "content"
+
+
 def merged_call(cid):
     per = {}
     for m in MODELS:
@@ -101,8 +127,11 @@ def merged_call(cid):
             e = ev_by_onset[round(r["t0"], 2)]
             ev = {"sir": e.get("sir_db"), "dur": e.get("cust_dur_s"),
                   "stop": e.get("bot_stopped"), "lat": e.get("stop_latency_ms")}
+        dig = has_digit(texts.get(DEFAULT_MODEL, ""))
+        dur = r.get("t1", r["t0"]) - r["t0"]
         turns.append({"key": key, "spk": r["spk"], "t0": r["t0"], "t1": r.get("t1", r["t0"]),
-                      "texts": texts, "ev": ev, "digit": has_digit(texts.get(DEFAULT_MODEL, ""))})
+                      "texts": texts, "ev": ev, "digit": dig,
+                      "suggest": suggest_kind(texts.get(DEFAULT_MODEL, ""), dur, dig)})
     return {"call_id": cid, "bot_ch": base.get("bot_ch"),
             "dur_s": base.get("metrics", {}).get("dur_s"),
             "models": [m for m in MODELS if m in per],
@@ -196,6 +225,11 @@ class H(BaseHTTPRequestHandler):
                 wav, sr = get_audio(cid)
                 t0 = max(0.0, float(q["t0"][0]) - PAD); t1 = float(q["t1"][0]) + PAD
                 seg = wav[int(t0 * sr):int(t1 * sr)]
+                ch = q.get("ch", ["mix"])[0]        # mix=2 kênh, khach/bot=1 kênh riêng
+                if ch in ("khach", "bot") and seg.shape[1] > 1:
+                    bc = bot_ch_of(cid)
+                    idx = bc if ch == "bot" else (1 - bc)
+                    seg = seg[:, idx:idx + 1]        # giữ 2D 1 kênh -> nghe sạch không lẫn
                 self._wav(seg if len(seg) else np.zeros((sr // 10, wav.shape[1]), "float32"), sr)
             else:
                 self._send(404, {"err": "not found"})

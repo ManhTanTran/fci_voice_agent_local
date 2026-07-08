@@ -32,10 +32,34 @@ WAV_DIR = os.path.join(HERE, "wav")
 DEFAULT_MODEL = "parakeet"
 
 
+BACKCHANNEL = set("dạ vâng ừ ừm à ạ ờ ừa alo lô ok okê okey đúng hử ừhử vầng".split())
+
+
+def has_digit(text, k=2):
+    D = set("khong mot mot hai ba bon tu nam lam sau bay tam chin".split())
+    ws = text.lower().split(); run = best = 0
+    for w in ws:
+        run = run + 1 if w in D else 0
+        best = max(best, run)
+    return best >= k
+
+
+def suggest_kind(text, dur, digit):
+    if digit:
+        return "content"
+    t = text.strip().lower(); ws = t.split()
+    if not ws or t in (".", "—", ""):
+        return "skip"
+    if len(ws) <= 2 and (dur < 0.9 or all(w in BACKCHANNEL for w in ws)):
+        return "backchannel"
+    return "content"
+
+
 def call_meta(cid):
-    """turns {key:(spk,t0,t1)} + bot_ch từ JSON model default (cùng VAD với lúc label)."""
+    """turns {key:(spk,t0,t1,text)} + bot_ch từ JSON model default (cùng VAD với lúc label)."""
     j = json.load(open(os.path.join(OUT_DIR, DEFAULT_MODEL, cid + ".json"), encoding="utf-8"))
-    turns = {f"{t['spk']}@{t['t0']:.2f}": (t["spk"], t["t0"], t.get("t1", t["t0"])) for t in j["turns"]}
+    turns = {f"{t['spk']}@{t['t0']:.2f}": (t["spk"], t["t0"], t.get("t1", t["t0"]), t.get("text", ""))
+             for t in j["turns"]}
     return turns, j.get("bot_ch", 0)
 
 
@@ -45,27 +69,41 @@ def main():
                     help="chỉ lấy turn đã tick chốt; mặc định lấy MỌI turn có text")
     args = ap.parse_args()
     os.makedirs(WAV_DIR, exist_ok=True)
-    man, brows = [], []
+    man, brows, krows = [], [], []
+    cov = {"content_total": 0, "content_labeled": 0, "backchannel": 0, "skip": 0}
     for gp in sorted(glob.glob(os.path.join(GOLD_DIR, "*.json"))):
         cid = os.path.basename(gp)[:-5]
         gold = json.load(open(gp, encoding="utf-8"))
         if not gold:
             continue
         turns, bot_ch = call_meta(cid)
+        # coverage: đếm content-total trên TOÀN turn của cuộc (kind người gắn > gợi ý)
+        for key, (spk, t0, t1, ptext) in turns.items():
+            k = gold.get(key, {}).get("kind") or suggest_kind(ptext, t1 - t0, has_digit(ptext))
+            if k == "content":
+                cov["content_total"] += 1
         wav, sr = sf.read(os.path.join(AUDIO_DIR, cid + ".wav"), dtype="float32", always_2d=True)
         for key, rec in gold.items():
             if key not in turns:
                 continue
-            spk, t0, t1 = turns[key]
+            spk, t0, t1, ptext = turns[key]
             # nhãn barge-in cho MỌI turn có gắn
             if rec.get("is_bargein") is not None or rec.get("group"):
                 brows.append([cid, key, f"{t0:.2f}", f"{t1:.2f}",
                               int(bool(rec.get("is_bargein"))), rec.get("group", "")])
-            # manifest WER: mặc định MỌI turn có text (chốt không bắt buộc); --only-done để lọc bản cuối
-            if not rec.get("text", "").strip():
+            kind = rec.get("kind") or suggest_kind(ptext, t1 - t0, has_digit(ptext))
+            # taxonomy phân loại turn (cần-gõ/dạ-vâng/bỏ) — nhãn dùng lại cho VAD/turn-detection
+            krows.append([cid, key, spk, f"{t0:.2f}", f"{t1:.2f}", kind, rec.get("text", "").strip()])
+            if kind == "backchannel":
+                cov["backchannel"] += 1
+            elif kind == "skip":
+                cov["skip"] += 1
+            # manifest WER: CHỈ turn nội dung + có text (backchannel/bỏ loại khỏi thước)
+            if kind != "content" or not rec.get("text", "").strip():
                 continue
             if args.only_done and not rec.get("done"):
                 continue
+            cov["content_labeled"] += 1
             ch = bot_ch if spk == "bot" else (1 - bot_ch)
             ch = min(ch, wav.shape[1] - 1)
             seg = wav[int(t0 * sr):int(t1 * sr), ch]
@@ -82,8 +120,15 @@ def main():
     cp = os.path.join(HERE, "gold_bargein.csv")
     with open(cp, "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f); w.writerow(["call_id", "key", "t0", "t1", "is_bargein", "group"]); w.writerows(brows)
-    print(f"[gold] manifest={len(man)} turn -> {mp}", flush=True)
+    kp = os.path.join(HERE, "gold_kinds.csv")
+    with open(kp, "w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f); w.writerow(["call_id", "key", "spk", "t0", "t1", "kind", "text"]); w.writerows(krows)
+    print(f"[gold] manifest={len(man)} turn nội dung -> {mp}", flush=True)
     print(f"[gold] bargein={len(brows)} nhãn -> {cp}", flush=True)
+    print(f"[gold] kinds={len(krows)} nhãn phân loại turn (cần-gõ/dạ-vâng/bỏ) -> {kp}", flush=True)
+    print(f"[coverage] nội dung đã gõ {cov['content_labeled']}/{cov['content_total']} "
+          f"| đế {cov['backchannel']} | bỏ {cov['skip']}  "
+          f"(WER chỉ tính trên turn nội dung, không tính đế/bỏ)", flush=True)
 
 
 if __name__ == "__main__":

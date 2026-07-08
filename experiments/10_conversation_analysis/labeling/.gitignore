@@ -3,3 +3,4 @@ gold/
 wav/
 gold_manifest.jsonl
 gold_bargein.csv
+gold_kinds.csv

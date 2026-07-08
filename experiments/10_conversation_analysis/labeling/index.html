@@ -31,7 +31,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);display:flex;
 #head .r{display:flex;gap:14px;align-items:center;margin-top:8px;flex-wrap:wrap}
 #head audio{height:34px}
 #prog{font-size:12.5px;color:var(--muted)}#prog b{color:var(--ok)}
-#filter{font-size:12px;color:var(--muted);cursor:pointer;user-select:none}
+#filter,#filter2{font-size:12px;color:var(--muted);cursor:pointer;user-select:none}
 #turns{overflow-y:auto;flex:1;padding:14px 18px}
 .card{border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin:7px 0;background:var(--panel)}
 .card.cust{border-left:3px solid var(--cust)}.card.bot{border-left:3px solid var(--bot)}
@@ -41,6 +41,12 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans);display:flex;
 .spk{font-weight:700}.spk.bot{color:var(--bot)}.spk.cust{color:var(--cust)}
 .play{cursor:pointer;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px;padding:2px 9px;font-size:13px}
 .play:hover{border-color:var(--bot)}
+.play2{cursor:pointer;border:1px solid var(--line);background:var(--bg);color:var(--muted);border-radius:6px;padding:1px 7px;font-size:10.5px}
+.play2:hover{border-color:var(--bot);color:var(--ink)}
+.card.kind-backchannel{opacity:.6}.card.kind-skip{opacity:.4}
+.kinds{margin-left:auto;display:flex;gap:4px}
+.kb{cursor:pointer;border:1px solid var(--line);background:var(--bg);color:var(--muted);border-radius:6px;padding:1px 8px;font-size:10.5px}
+.kb.on{color:var(--ink);border-color:var(--bot);background:var(--bot-bg);font-weight:600}
 .refs{margin:6px 0;font-size:12px}
 .ref{display:flex;gap:7px;align-items:baseline;margin:2px 0}
 .ref .m{flex:none;width:64px;font-family:var(--mono);font-size:10.5px;color:var(--muted);cursor:pointer;text-decoration:underline dotted}
@@ -68,6 +74,7 @@ select,.brow input{font-size:12px}
       <audio id="full" controls preload="none"></audio>
       <span id="prog"></span>
       <span id="filter">[ ] chỉ turn có số</span>
+      <span id="filter2">[ ] chỉ hiện turn cần gõ</span>
     </div>
   </div>
   <div id="empty" class="hint">Chọn một cuộc gọi bên trái để bắt đầu.</div>
@@ -75,7 +82,7 @@ select,.brow input{font-size:12px}
 </div>
 <script>
 const GROUPS = __GROUPS__;
-let CALL=null, onlyDigit=false;
+let CALL=null, onlyDigit=false, hideNoise=false;
 const esc=s=>(s||"").replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const oov=s=>esc(s).replace(/⁇/g,'<span class="oov">⁇</span>');
 
@@ -110,10 +117,12 @@ function render(){
   CALL.turns.forEach(t=>{
     const g=CALL.gold[t.key]||{};
     if(g.done) done++;
+    const kind=g.kind||t.suggest;
     if(onlyDigit && !t.digit) return;
+    if(hideNoise && kind!=='content') return;
     const cand=!!t.ev;
     const card=document.createElement('div');
-    card.className='card '+t.spk+(cand?' cand':'')+(g.done?' done':'');
+    card.className='card '+t.spk+(cand?' cand':'')+(g.done?' done':'')+' kind-'+kind;
     let refs='';
     CALL.models.forEach(m=>{ if(t.texts[m]!==undefined)
       refs+=`<div class="ref"><span class="m" title="dùng bản này">${m}</span><span class="tx">${oov(t.texts[m])||'—'}</span></div>`;
@@ -131,13 +140,23 @@ function render(){
     } else {
       brow=`<div class="brow"><label style="margin-left:auto"><input type="checkbox" class="dn" ${g.done?'checked':''}> ✓ chốt</label><span class="sv"></span></div>`;
     }
-    card.innerHTML=`<div class="chdr"><button class="play">▶</button>
+    const own=t.spk==='cust'?'khach':'bot', other=t.spk==='cust'?'bot':'khach';
+    const otherLbl=t.spk==='cust'?'+ bot':'+ khách';
+    card.innerHTML=`<div class="chdr">
+      <button class="play" data-ch="${own}" title="nghe riêng kênh người nói này">▶</button>
+      <button class="play2" data-ch="${other}" title="nghe riêng kênh còn lại">${otherLbl}</button>
+      <button class="play2" data-ch="mix" title="nghe cả hai kênh">2 kênh</button>
       <span class="spk ${t.spk}">${t.spk==='bot'?'BOT':'KHÁCH'}</span>
-      <span>${t.t0.toFixed(1)}–${t.t1.toFixed(1)}s</span>${t.digit?'<span class="badge dig">SỐ</span>':''}</div>
+      <span>${t.t0.toFixed(1)}–${t.t1.toFixed(1)}s</span>${t.digit?'<span class="badge dig">SỐ</span>':''}
+      <span class="kinds">
+        <button class="kb ${kind==='content'?'on':''}" data-k="content" title="có nội dung — cần gõ transcript">cần gõ</button>
+        <button class="kb ${kind==='backchannel'?'on':''}" data-k="backchannel" title="tiếng đế dạ/vâng/ừ — không đo WER">dạ/vâng</button>
+        <button class="kb ${kind==='skip'?'on':''}" data-k="skip" title="nhiễu / không nghe rõ — loại khỏi WER">bỏ</button>
+      </span></div>
       <div class="refs">${refs}</div>
       <textarea class="gold" rows="1">${esc(goldText)}</textarea>${brow}`;
     // handlers
-    card.querySelector('.play').onclick=()=>playSeg(t.t0,t.t1);
+    card.querySelectorAll('.play,.play2').forEach(b=>b.onclick=()=>playSeg(t.t0,t.t1,b.dataset.ch));
     const ta=card.querySelector('.gold'), sv=card.querySelector('.sv');
     autoGrow(ta);
     let tmr=null;
@@ -147,6 +166,12 @@ function render(){
     const dn=card.querySelector('.dn'); if(dn) dn.onchange=()=>{save(t.key,{done:dn.checked},sv); card.classList.toggle('done',dn.checked); updProg();};
     const bi=card.querySelector('.bi'); if(bi) bi.onchange=()=>save(t.key,{is_bargein:bi.checked},sv);
     const grp=card.querySelector('.grp'); if(grp) grp.onchange=()=>save(t.key,{group:grp.value},sv);
+    card.querySelectorAll('.kb').forEach(b=>b.onclick=()=>{
+      save(t.key,{kind:b.dataset.k},sv);
+      card.className='card '+t.spk+(cand?' cand':'')+((CALL.gold[t.key]||{}).done?' done':'')+' kind-'+b.dataset.k;
+      card.querySelectorAll('.kb').forEach(x=>x.classList.toggle('on',x.dataset.k===b.dataset.k));
+      if(hideNoise && b.dataset.k!=='content') card.style.display='none';
+    });
     box.appendChild(card);
   });
   updProg();
@@ -170,13 +195,15 @@ async function save(key,patch,sv){
 }
 
 let segAudio=new Audio();
-function playSeg(t0,t1){
+function playSeg(t0,t1,ch){
   segAudio.pause();
-  segAudio=new Audio(`/seg/${CALL.call_id}.wav?t0=${t0}&t1=${t1}`);
+  segAudio=new Audio(`/seg/${CALL.call_id}.wav?t0=${t0}&t1=${t1}&ch=${ch||'mix'}`);
   segAudio.play();
 }
 function autoGrow(ta){ta.style.height='auto';ta.style.height=(ta.scrollHeight+2)+'px';}
 document.getElementById('filter').onclick=()=>{onlyDigit=!onlyDigit;
   document.getElementById('filter').textContent=(onlyDigit?'[x]':'[ ]')+' chỉ turn có số'; render();};
+document.getElementById('filter2').onclick=()=>{hideNoise=!hideNoise;
+  document.getElementById('filter2').textContent=(hideNoise?'[x]':'[ ]')+' chỉ hiện turn cần gõ'; render();};
 loadCalls();
 </script></body></html>
