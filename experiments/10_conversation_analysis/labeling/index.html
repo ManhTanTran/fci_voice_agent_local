@@ -82,13 +82,14 @@ select,.brow input{font-size:12px}
 </div>
 <script>
 const GROUPS = __GROUPS__;
+const USER = new URLSearchParams(location.search).get('user') || '';
 let CALL=null, onlyDigit=false, hideNoise=false;
 const esc=s=>(s||"").replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const oov=s=>esc(s).replace(/⁇/g,'<span class="oov">⁇</span>');
 
 async function loadCalls(){
-  const rows=await (await fetch('/api/calls')).json();
-  document.getElementById('count').textContent='('+rows.length+')';
+  const rows=await (await fetch('/api/calls?user='+encodeURIComponent(USER))).json();
+  document.getElementById('count').textContent='('+rows.length+(USER?' · '+USER:'')+')';
   const L=document.getElementById('list'); L.innerHTML='';
   rows.forEach(d=>{
     const el=document.createElement('div'); el.className='li'; el.dataset.cid=d.call_id;
@@ -103,7 +104,7 @@ async function loadCalls(){
 
 async function selectCall(cid){
   document.querySelectorAll('.li').forEach(e=>e.classList.toggle('sel',e.dataset.cid===cid));
-  CALL=await (await fetch('/api/call/'+cid)).json();
+  CALL=await (await fetch('/api/call/'+cid+'?user='+encodeURIComponent(USER))).json();
   document.getElementById('head').style.display='';
   document.getElementById('empty').style.display='none';
   document.getElementById('hcid').textContent=cid+'  · bot=kênh '+CALL.bot_ch;
@@ -189,7 +190,7 @@ async function save(key,patch,sv){
   if(sv){sv.textContent='lưu...';sv.className='sv';}
   try{
     await fetch('/api/save',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({call_id:CALL.call_id,key,rec:patch})});
+      body:JSON.stringify({call_id:CALL.call_id,key,rec:patch,user:USER})});
     if(sv){sv.textContent='✓ đã lưu';sv.className='sv ok';}
   }catch(e){ if(sv){sv.textContent='lỗi lưu';} }
 }

@@ -55,7 +55,7 @@ def bot_ch_of(cid):
 
 
 # ---------------- data ----------------
-def list_calls():
+def list_calls(user=""):
     files = sorted(glob_json(os.path.join(OUT_DIR, DEFAULT_MODEL)))
     rows = []
     for f in files:
@@ -63,7 +63,7 @@ def list_calls():
         cid = j["call_id"]
         turns = j.get("turns", [])
         ndig = sum(1 for t in turns if has_digit(t.get("text", "")))
-        gold = load_gold(cid)
+        gold = load_gold(cid, user)
         ndone = sum(1 for r in gold.values() if r.get("done"))
         rows.append({"call_id": cid, "dur_s": j.get("metrics", {}).get("dur_s"),
                      "n_turn": len(turns), "n_digit": ndig,
@@ -105,7 +105,7 @@ def suggest_kind(text, dur, digit):
     return "content"
 
 
-def merged_call(cid):
+def merged_call(cid, user=""):
     per = {}
     for m in MODELS:
         p = os.path.join(OUT_DIR, m, cid + ".json")
@@ -135,21 +135,28 @@ def merged_call(cid):
     return {"call_id": cid, "bot_ch": base.get("bot_ch"),
             "dur_s": base.get("metrics", {}).get("dur_s"),
             "models": [m for m in MODELS if m in per],
-            "default_model": DEFAULT_MODEL, "turns": turns, "gold": load_gold(cid)}
+            "default_model": DEFAULT_MODEL, "turns": turns, "gold": load_gold(cid, user)}
 
 
-def load_gold(cid):
-    p = os.path.join(GOLD_DIR, cid + ".json")
+def _gold_dir(user=""):
+    # mỗi người 1 thư mục gold riêng -> nhiều người label song song không đè nhau
+    user = re.sub(r"[^a-zA-Z0-9_-]", "", user or "")
+    return os.path.join(GOLD_DIR, user) if user else GOLD_DIR
+
+
+def load_gold(cid, user=""):
+    p = os.path.join(_gold_dir(user), cid + ".json")
     return json.load(open(p, encoding="utf-8")) if os.path.isfile(p) else {}
 
 
-def save_gold_record(cid, key, rec):
-    os.makedirs(GOLD_DIR, exist_ok=True)
-    g = load_gold(cid)
+def save_gold_record(cid, key, rec, user=""):
+    d = _gold_dir(user)
+    os.makedirs(d, exist_ok=True)
+    g = load_gold(cid, user)
     g[key] = {**g.get(key, {}), **rec}
-    tmp = os.path.join(GOLD_DIR, cid + ".json.tmp")
+    tmp = os.path.join(d, cid + ".json.tmp")
     json.dump(g, open(tmp, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-    os.replace(tmp, os.path.join(GOLD_DIR, cid + ".json"))
+    os.replace(tmp, os.path.join(d, cid + ".json"))
     return g[key]
 
 
@@ -210,12 +217,13 @@ class H(BaseHTTPRequestHandler):
         u = urlparse(self.path)
         p, q = u.path, parse_qs(u.query)
         try:
+            user = q.get("user", [""])[0]
             if p == "/":
                 self._send(200, INDEX_HTML, "text/html; charset=utf-8")
             elif p == "/api/calls":
-                self._send(200, list_calls())
+                self._send(200, list_calls(user))
             elif p.startswith("/api/call/"):
-                self._send(200, merged_call(p.split("/")[-1]))
+                self._send(200, merged_call(p.split("/")[-1], user))
             elif p.startswith("/audio/"):
                 cid = p.split("/")[-1].replace(".wav", "")
                 wav, sr = get_audio(cid)
@@ -242,7 +250,7 @@ class H(BaseHTTPRequestHandler):
         body = json.loads(self.rfile.read(n) or b"{}")
         try:
             if u.path == "/api/save":
-                rec = save_gold_record(body["call_id"], body["key"], body["rec"])
+                rec = save_gold_record(body["call_id"], body["key"], body["rec"], body.get("user", ""))
                 self._send(200, {"ok": True, "rec": rec})
             else:
                 self._send(404, {"err": "not found"})
@@ -259,9 +267,24 @@ def main():
     global INDEX_HTML
     with open(os.path.join(HERE, "index.html"), encoding="utf-8") as f:
         INDEX_HTML = f.read().replace("__GROUPS__", json.dumps(GROUPS, ensure_ascii=False))
-    srv = ThreadingHTTPServer(("127.0.0.1", PORT), H)
-    print(f"[label] http://localhost:{PORT}  (audio={AUDIO_DIR})", flush=True)
+    host = os.environ.get("LABEL_HOST", "0.0.0.0")   # 0.0.0.0 = cho máy khác trong mạng vào được
+    srv = ThreadingHTTPServer((host, PORT), H)
+    ip = _lan_ip()
+    print(f"[label] máy này:   http://localhost:{PORT}", flush=True)
+    print(f"[label] chia team: http://{ip}:{PORT}/?user=<tên>   (gửi link này cho team, mỗi người 1 tên)", flush=True)
+    print(f"[label] audio={AUDIO_DIR}", flush=True)
     srv.serve_forever()
+
+
+def _lan_ip():
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80)); return s.getsockname()[0]
+    except Exception:
+        return "127.0.0.1"
+    finally:
+        s.close()
 
 
 if __name__ == "__main__":

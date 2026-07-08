@@ -71,17 +71,25 @@ def main():
     os.makedirs(WAV_DIR, exist_ok=True)
     man, brows, krows = [], [], []
     cov = {"content_total": 0, "content_labeled": 0, "backchannel": 0, "skip": 0}
-    for gp in sorted(glob.glob(os.path.join(GOLD_DIR, "*.json"))):
+    seen_man = set()          # dedupe manifest theo (cid,key) khi nhiều user cùng gắn
+    cnt_cids = set()          # content_total đếm mỗi cuộc 1 lần dù nhiều user
+    # gộp gold FLAT gold/*.json + THEO USER gold/<user>/*.json
+    gfiles = sorted(glob.glob(os.path.join(GOLD_DIR, "*.json"))) + \
+        sorted(glob.glob(os.path.join(GOLD_DIR, "*", "*.json")))
+    for gp in gfiles:
         cid = os.path.basename(gp)[:-5]
+        parent = os.path.dirname(gp)
+        user = "" if os.path.abspath(parent) == os.path.abspath(GOLD_DIR) else os.path.basename(parent)
         gold = json.load(open(gp, encoding="utf-8"))
         if not gold:
             continue
         turns, bot_ch = call_meta(cid)
-        # coverage: đếm content-total trên TOÀN turn của cuộc (kind người gắn > gợi ý)
-        for key, (spk, t0, t1, ptext) in turns.items():
-            k = gold.get(key, {}).get("kind") or suggest_kind(ptext, t1 - t0, has_digit(ptext))
-            if k == "content":
-                cov["content_total"] += 1
+        # coverage: content-total đếm mỗi cuộc 1 lần (theo gợi ý), tránh nhân đôi khi nhiều user
+        if cid not in cnt_cids:
+            cnt_cids.add(cid)
+            for key, (spk, t0, t1, ptext) in turns.items():
+                if suggest_kind(ptext, t1 - t0, has_digit(ptext)) == "content":
+                    cov["content_total"] += 1
         wav, sr = sf.read(os.path.join(AUDIO_DIR, cid + ".wav"), dtype="float32", always_2d=True)
         for key, rec in gold.items():
             if key not in turns:
@@ -89,11 +97,11 @@ def main():
             spk, t0, t1, ptext = turns[key]
             # nhãn barge-in cho MỌI turn có gắn
             if rec.get("is_bargein") is not None or rec.get("group"):
-                brows.append([cid, key, f"{t0:.2f}", f"{t1:.2f}",
+                brows.append([cid, key, user, f"{t0:.2f}", f"{t1:.2f}",
                               int(bool(rec.get("is_bargein"))), rec.get("group", "")])
             kind = rec.get("kind") or suggest_kind(ptext, t1 - t0, has_digit(ptext))
             # taxonomy phân loại turn (cần-gõ/dạ-vâng/bỏ) — nhãn dùng lại cho VAD/turn-detection
-            krows.append([cid, key, spk, f"{t0:.2f}", f"{t1:.2f}", kind, rec.get("text", "").strip()])
+            krows.append([cid, key, user, spk, f"{t0:.2f}", f"{t1:.2f}", kind, rec.get("text", "").strip()])
             if kind == "backchannel":
                 cov["backchannel"] += 1
             elif kind == "skip":
@@ -103,6 +111,9 @@ def main():
                 continue
             if args.only_done and not rec.get("done"):
                 continue
+            if (cid, key) in seen_man:
+                continue
+            seen_man.add((cid, key))
             cov["content_labeled"] += 1
             ch = bot_ch if spk == "bot" else (1 - bot_ch)
             ch = min(ch, wav.shape[1] - 1)
@@ -119,10 +130,10 @@ def main():
     open(mp, "w", encoding="utf-8").write("\n".join(json.dumps(r, ensure_ascii=False) for r in man) + "\n")
     cp = os.path.join(HERE, "gold_bargein.csv")
     with open(cp, "w", encoding="utf-8", newline="") as f:
-        w = csv.writer(f); w.writerow(["call_id", "key", "t0", "t1", "is_bargein", "group"]); w.writerows(brows)
+        w = csv.writer(f); w.writerow(["call_id", "key", "user", "t0", "t1", "is_bargein", "group"]); w.writerows(brows)
     kp = os.path.join(HERE, "gold_kinds.csv")
     with open(kp, "w", encoding="utf-8", newline="") as f:
-        w = csv.writer(f); w.writerow(["call_id", "key", "spk", "t0", "t1", "kind", "text"]); w.writerows(krows)
+        w = csv.writer(f); w.writerow(["call_id", "key", "user", "spk", "t0", "t1", "kind", "text"]); w.writerows(krows)
     print(f"[gold] manifest={len(man)} turn nội dung -> {mp}", flush=True)
     print(f"[gold] bargein={len(brows)} nhãn -> {cp}", flush=True)
     print(f"[gold] kinds={len(krows)} nhãn phân loại turn (cần-gõ/dạ-vâng/bỏ) -> {kp}", flush=True)
