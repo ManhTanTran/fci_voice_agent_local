@@ -1,0 +1,5 @@
+# nhãn + kết xuất runtime do người label sinh — không commit
+gold/
+wav/
+gold_manifest.jsonl
+gold_bargein.csv

@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FPT — Labeling hội thoại</title>
+<style>
+:root{
+  --bg:#f5f6f8;--panel:#fff;--ink:#1a2230;--muted:#6b7688;--line:#e2e6ec;
+  --bot:#2b6cb0;--bot-bg:#e8f1fb;--cust:#b7791f;--cust-bg:#fcf3e3;
+  --alert:#d64545;--alert-bg:#fdecec;--ok:#2f855a;--ok-bg:#e7f4ec;
+  --mono:ui-monospace,Menlo,Consolas,monospace;--sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#0f151d;--panel:#161d27;--ink:#e6ecf3;--muted:#8b97a8;--line:#28313d;
+  --bot:#5aa2e0;--bot-bg:#16263a;--cust:#e0b060;--cust-bg:#302510;
+  --alert:#f06a6a;--alert-bg:#3a1c1c;--ok:#68d391;--ok-bg:#12261a;
+}}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);display:flex;height:100vh;overflow:hidden}
+#side{width:270px;flex:none;border-right:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column}
+#side h1{font-size:13px;margin:0;padding:12px 14px;border-bottom:1px solid var(--line)}
+#list{overflow-y:auto;flex:1}
+.li{padding:9px 14px;border-bottom:1px solid var(--line);cursor:pointer;font-size:12.5px}
+.li:hover{background:var(--bg)}.li.sel{background:var(--bot-bg)}
+.li .cid{font-family:var(--mono);font-weight:600}
+.li .mini{color:var(--muted);font-size:11px;margin-top:3px;display:flex;gap:8px;flex-wrap:wrap}
+.badge{font-family:var(--mono);padding:0 5px;border-radius:4px;background:var(--bg)}
+.badge.dig{color:var(--cust)}.badge.done{color:var(--ok)}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#head{padding:12px 18px;border-bottom:1px solid var(--line);background:var(--panel)}
+#head .cid{font-family:var(--mono);font-weight:600;font-size:14px}
+#head .r{display:flex;gap:14px;align-items:center;margin-top:8px;flex-wrap:wrap}
+#head audio{height:34px}
+#prog{font-size:12.5px;color:var(--muted)}#prog b{color:var(--ok)}
+#filter{font-size:12px;color:var(--muted);cursor:pointer;user-select:none}
+#turns{overflow-y:auto;flex:1;padding:14px 18px}
+.card{border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin:7px 0;background:var(--panel)}
+.card.cust{border-left:3px solid var(--cust)}.card.bot{border-left:3px solid var(--bot)}
+.card.cand{background:var(--alert-bg)}
+.card.done{background:var(--ok-bg)}
+.chdr{display:flex;gap:9px;align-items:center;font-size:11.5px;color:var(--muted);font-family:var(--mono)}
+.spk{font-weight:700}.spk.bot{color:var(--bot)}.spk.cust{color:var(--cust)}
+.play{cursor:pointer;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px;padding:2px 9px;font-size:13px}
+.play:hover{border-color:var(--bot)}
+.refs{margin:6px 0;font-size:12px}
+.ref{display:flex;gap:7px;align-items:baseline;margin:2px 0}
+.ref .m{flex:none;width:64px;font-family:var(--mono);font-size:10.5px;color:var(--muted);cursor:pointer;text-decoration:underline dotted}
+.ref .m:hover{color:var(--bot)}
+.ref .tx{flex:1}.oov{color:var(--alert)}
+textarea.gold{width:100%;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);
+  font-family:var(--sans);font-size:13.5px;padding:6px 9px;resize:vertical;min-height:34px;line-height:1.4}
+textarea.gold:focus{outline:none;border-color:var(--bot)}
+.brow{display:flex;gap:12px;align-items:center;margin-top:6px;font-size:12px;flex-wrap:wrap}
+.brow label{color:var(--muted);cursor:pointer}
+select,.brow input{font-size:12px}
+.sv{font-size:10.5px;color:var(--muted);min-width:60px}
+.sv.ok{color:var(--ok)}
+.hint{color:var(--muted);text-align:center;margin-top:38vh}
+</style></head>
+<body>
+<div id="side">
+  <h1>Labeling hội thoại <span id="count" style="color:var(--muted);font-weight:400"></span></h1>
+  <div id="list"></div>
+</div>
+<div id="main">
+  <div id="head" style="display:none">
+    <div class="cid" id="hcid"></div>
+    <div class="r">
+      <audio id="full" controls preload="none"></audio>
+      <span id="prog"></span>
+      <span id="filter">[ ] chỉ turn có số</span>
+    </div>
+  </div>
+  <div id="empty" class="hint">Chọn một cuộc gọi bên trái để bắt đầu.</div>
+  <div id="turns"></div>
+</div>
+<script>
+const GROUPS = __GROUPS__;
+let CALL=null, onlyDigit=false;
+const esc=s=>(s||"").replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const oov=s=>esc(s).replace(/⁇/g,'<span class="oov">⁇</span>');
+
+async function loadCalls(){
+  const rows=await (await fetch('/api/calls')).json();
+  document.getElementById('count').textContent='('+rows.length+')';
+  const L=document.getElementById('list'); L.innerHTML='';
+  rows.forEach(d=>{
+    const el=document.createElement('div'); el.className='li'; el.dataset.cid=d.call_id;
+    el.innerHTML=`<div class="cid">${d.call_id.slice(0,8)}</div>
+      <div class="mini"><span class="badge">${(d.dur_s||0)|0}s</span>
+      <span class="badge dig">${d.n_digit} số</span>
+      <span class="badge done">${d.n_done}/${d.n_turn}</span></div>`;
+    el.onclick=()=>selectCall(d.call_id);
+    L.appendChild(el);
+  });
+}
+
+async function selectCall(cid){
+  document.querySelectorAll('.li').forEach(e=>e.classList.toggle('sel',e.dataset.cid===cid));
+  CALL=await (await fetch('/api/call/'+cid)).json();
+  document.getElementById('head').style.display='';
+  document.getElementById('empty').style.display='none';
+  document.getElementById('hcid').textContent=cid+'  · bot=kênh '+CALL.bot_ch;
+  document.getElementById('full').src='/audio/'+cid+'.wav';
+  render();
+}
+
+function render(){
+  const box=document.getElementById('turns'); box.innerHTML='';
+  let done=0;
+  CALL.turns.forEach(t=>{
+    const g=CALL.gold[t.key]||{};
+    if(g.done) done++;
+    if(onlyDigit && !t.digit) return;
+    const cand=!!t.ev;
+    const card=document.createElement('div');
+    card.className='card '+t.spk+(cand?' cand':'')+(g.done?' done':'');
+    let refs='';
+    CALL.models.forEach(m=>{ if(t.texts[m]!==undefined)
+      refs+=`<div class="ref"><span class="m" title="dùng bản này">${m}</span><span class="tx">${oov(t.texts[m])||'—'}</span></div>`;
+    });
+    const goldText = g.text!==undefined ? g.text : (t.texts[CALL.default_model]||'');
+    let brow='';
+    if(t.spk==='cust'){
+      const opts=GROUPS.map(gr=>`<option value="${gr}" ${g.group===gr?'selected':''}>${gr||'—nhóm—'}</option>`).join('');
+      brow=`<div class="brow">
+        <label><input type="checkbox" class="bi" ${g.is_bargein?'checked':''}> barge-in</label>
+        <select class="grp">${opts}</select>
+        ${cand?'<span class="badge dig">ứng viên</span>':''}
+        <label style="margin-left:auto"><input type="checkbox" class="dn" ${g.done?'checked':''}> ✓ chốt</label>
+        <span class="sv"></span></div>`;
+    } else {
+      brow=`<div class="brow"><label style="margin-left:auto"><input type="checkbox" class="dn" ${g.done?'checked':''}> ✓ chốt</label><span class="sv"></span></div>`;
+    }
+    card.innerHTML=`<div class="chdr"><button class="play">▶</button>
+      <span class="spk ${t.spk}">${t.spk==='bot'?'BOT':'KHÁCH'}</span>
+      <span>${t.t0.toFixed(1)}–${t.t1.toFixed(1)}s</span>${t.digit?'<span class="badge dig">SỐ</span>':''}</div>
+      <div class="refs">${refs}</div>
+      <textarea class="gold" rows="1">${esc(goldText)}</textarea>${brow}`;
+    // handlers
+    card.querySelector('.play').onclick=()=>playSeg(t.t0,t.t1);
+    const ta=card.querySelector('.gold'), sv=card.querySelector('.sv');
+    autoGrow(ta);
+    let tmr=null;
+    ta.oninput=()=>{autoGrow(ta); sv.textContent='...'; sv.className='sv';
+      clearTimeout(tmr); tmr=setTimeout(()=>save(t.key,{text:ta.value},sv),700);};
+    card.querySelectorAll('.m').forEach((mm,i)=>{ mm.onclick=()=>{ta.value=t.texts[CALL.models[i]]||''; autoGrow(ta); save(t.key,{text:ta.value},sv);}; });
+    const dn=card.querySelector('.dn'); if(dn) dn.onchange=()=>{save(t.key,{done:dn.checked},sv); card.classList.toggle('done',dn.checked); updProg();};
+    const bi=card.querySelector('.bi'); if(bi) bi.onchange=()=>save(t.key,{is_bargein:bi.checked},sv);
+    const grp=card.querySelector('.grp'); if(grp) grp.onchange=()=>save(t.key,{group:grp.value},sv);
+    box.appendChild(card);
+  });
+  updProg();
+}
+
+function updProg(){
+  const done=CALL.turns.filter(t=>(CALL.gold[t.key]||{}).done).length;
+  document.getElementById('prog').innerHTML=`đã chốt <b>${done}</b>/${CALL.turns.length}`;
+  const li=document.querySelector(`.li[data-cid="${CALL.call_id}"] .done`);
+  if(li) li.textContent=done+'/'+CALL.turns.length;
+}
+
+async function save(key,patch,sv){
+  CALL.gold[key]={...(CALL.gold[key]||{}),...patch};
+  if(sv){sv.textContent='lưu...';sv.className='sv';}
+  try{
+    await fetch('/api/save',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({call_id:CALL.call_id,key,rec:patch})});
+    if(sv){sv.textContent='✓ đã lưu';sv.className='sv ok';}
+  }catch(e){ if(sv){sv.textContent='lỗi lưu';} }
+}
+
+let segAudio=new Audio();
+function playSeg(t0,t1){
+  segAudio.pause();
+  segAudio=new Audio(`/seg/${CALL.call_id}.wav?t0=${t0}&t1=${t1}`);
+  segAudio.play();
+}
+function autoGrow(ta){ta.style.height='auto';ta.style.height=(ta.scrollHeight+2)+'px';}
+document.getElementById('filter').onclick=()=>{onlyDigit=!onlyDigit;
+  document.getElementById('filter').textContent=(onlyDigit?'[x]':'[ ]')+' chỉ turn có số'; render();};
+loadCalls();
+</script></body></html>
