@@ -25,7 +25,17 @@ def runtime_info() -> dict:
 
 def restore_nemo(path: str | Path):
     import torch
-    import nemo.collections.asr as nemo_asr
+    try:
+        import nemo.collections.asr as nemo_asr
+    except Exception as exc:
+        msg = str(exc)
+        if "numba.cuda.types" in msg and "NPDatetime" in msg:
+            raise RuntimeError(
+                "NeMo ASR import failed because Kaggle pulled an incompatible numba-cuda package. "
+                "In the install cell, uninstall numba-cuda after installing NeMo, restart the kernel, "
+                "then rerun from section 2."
+            ) from exc
+        raise
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model = nemo_asr.models.ASRModel.restore_from(str(path), map_location=device)
