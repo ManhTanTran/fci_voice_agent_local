@@ -69,6 +69,11 @@ def transcribe_paths(model, paths: list[str], batch_size: int) -> list[str]:
 def setup_manifest_data(model, train_manifest: Path, dev_manifest: Path, batch_size: int) -> None:
     train_cfg = OmegaConf.to_container(model.cfg.train_ds, resolve=True)
     val_cfg = OmegaConf.to_container(model.cfg.validation_ds, resolve=True)
+
+    # Lhotse ignores use_start_end_token and pretokenize=True can slow Kaggle runs.
+    train_cfg.pop("use_start_end_token", None)
+    val_cfg.pop("use_start_end_token", None)
+
     train_cfg.update(
         {
             "manifest_filepath": str(train_manifest),
@@ -77,6 +82,7 @@ def setup_manifest_data(model, train_manifest: Path, dev_manifest: Path, batch_s
             "shuffle": True,
             "num_workers": 2,
             "pin_memory": True,
+            "pretokenize": False,
         }
     )
     val_cfg.update(
@@ -87,6 +93,7 @@ def setup_manifest_data(model, train_manifest: Path, dev_manifest: Path, batch_s
             "shuffle": False,
             "num_workers": 2,
             "pin_memory": True,
+            "pretokenize": False,
         }
     )
     model.setup_training_data(train_data_config=train_cfg)
