@@ -5,6 +5,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+HF_STABLE_VERSION = "0.36.0"
+
 
 def run_cmd(cmd: list[str]) -> None:
     print("$", " ".join(map(str, cmd)), flush=True)
@@ -49,6 +51,22 @@ def ensure_bucket_cli() -> None:
         raise RuntimeError("hf CLI still has no buckets support after upgrade; restart kernel and rerun.")
 
 
+def restore_stable_hf_hub() -> None:
+    print(f"[hf] restoring huggingface_hub=={HF_STABLE_VERSION} for transformers compatibility", flush=True)
+    run_cmd(
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "-q",
+            "--upgrade",
+            "--no-cache-dir",
+            f"huggingface_hub=={HF_STABLE_VERSION}",
+        ]
+    )
+
+
 def download_model(model_uri: str, model_path: str | Path) -> Path:
     path = Path(model_path)
     if path.exists() and path.stat().st_size > 100_000_000:
@@ -57,5 +75,8 @@ def download_model(model_uri: str, model_path: str | Path) -> Path:
 
     path.parent.mkdir(parents=True, exist_ok=True)
     ensure_bucket_cli()
-    run_cmd(["hf", "buckets", "cp", model_uri, str(path)])
+    try:
+        run_cmd(["hf", "buckets", "cp", model_uri, str(path)])
+    finally:
+        restore_stable_hf_hub()
     return path
