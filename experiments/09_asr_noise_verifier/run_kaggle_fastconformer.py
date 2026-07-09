@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 from pathlib import Path
 
@@ -13,41 +12,14 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from fc_noise_ft.config import RunConfig
+from fc_noise_ft.datasets import (
+    DEFAULT_VIVOS_DIR,
+    DEFAULT_VIVOS_TAR,
+    DEFAULT_VIVOS_URL,
+    ensure_vivos,
+)
 from fc_noise_ft.pipeline import run_pipeline
 
-
-DEFAULT_VIVOS_URL = "https://zenodo.org/records/7068130/files/vivos.tar.gz?download=1"
-DEFAULT_VIVOS_TAR = Path("/kaggle/working/vivos.tar.gz")
-DEFAULT_VIVOS_DIR = Path("/kaggle/working/vivos_raw")
-
-
-def run_cmd(cmd: list[str]) -> None:
-    print("$", " ".join(map(str, cmd)), flush=True)
-    subprocess.run([str(x) for x in cmd], check=True)
-
-
-def find_prompts(root: Path) -> list[Path]:
-    return sorted(root.rglob("prompts.txt"))
-
-
-def ensure_vivos(vivos_url: str, vivos_tar: Path, vivos_dir: Path, force_download: bool = False) -> Path:
-    prompts = find_prompts(vivos_dir)
-    if prompts and not force_download:
-        print("[vivos] reuse existing extracted dataset", flush=True)
-        print("[vivos] prompts:", [str(p) for p in prompts[:10]], flush=True)
-        return vivos_dir
-
-    vivos_dir.mkdir(parents=True, exist_ok=True)
-    if force_download or not vivos_tar.exists():
-        run_cmd(["wget", "-O", str(vivos_tar), vivos_url])
-    run_cmd(["tar", "-xzf", str(vivos_tar), "-C", str(vivos_dir)])
-
-    prompts = find_prompts(vivos_dir)
-    if not prompts:
-        raise RuntimeError(f"No prompts.txt found after extracting VIVOS under {vivos_dir}")
-
-    print("[vivos] prompts:", [str(p) for p in prompts[:10]], flush=True)
-    return vivos_dir
 
 
 def balanced_train_grid() -> list[tuple[str, int | None]]:

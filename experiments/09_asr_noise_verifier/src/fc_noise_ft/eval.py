@@ -4,7 +4,6 @@ from pathlib import Path
 
 import jiwer
 import pandas as pd
-from tqdm.auto import tqdm
 
 from .nemo_runner import transcribe_paths
 from .text_norm import normalize_text
@@ -14,8 +13,9 @@ def eval_manifest(model, meta_csv: str | Path, name: str, work_dir: str | Path, 
     work_dir = Path(work_dir)
     meta = pd.read_csv(meta_csv)
     hyps: list[str] = []
+    print(f"[eval] {name} start: {len(meta)} samples", flush=True)
 
-    for i in tqdm(range(0, len(meta), batch_size), desc=f"eval {name}"):
+    for i in range(0, len(meta), batch_size):
         paths = meta.audio_filepath.iloc[i : i + batch_size].tolist()
         hyps.extend(transcribe_paths(model, paths, batch_size=batch_size))
 
@@ -39,5 +39,5 @@ def eval_manifest(model, meta_csv: str | Path, name: str, work_dir: str | Path, 
     meta.to_csv(pred_path, index=False)
     wer_df = pd.DataFrame(rows).sort_values(["noise_type", "snr_db"])
     wer_df.to_csv(wer_path, index=False)
-    print("[eval] wrote", pred_path, wer_path, flush=True)
+    print(f"[eval] {name} done: wrote {pred_path} and {wer_path}", flush=True)
     return wer_df

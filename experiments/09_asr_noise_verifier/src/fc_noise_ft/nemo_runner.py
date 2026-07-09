@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import contextlib
+import io
 from pathlib import Path
 
 from omegaconf import OmegaConf
@@ -85,13 +87,14 @@ def patch_inference_config(model, batch_size: int) -> None:
 
 def transcribe_paths(model, paths: list[str], batch_size: int) -> list[str]:
     patch_inference_config(model, batch_size)
-    try:
-        out = model.transcribe(paths, batch_size=batch_size, return_hypotheses=False)
-    except TypeError:
+    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
         try:
-            out = model.transcribe(audio=paths, batch_size=batch_size)
+            out = model.transcribe(paths, batch_size=batch_size, return_hypotheses=False)
         except TypeError:
-            out = model.transcribe(paths)
+            try:
+                out = model.transcribe(audio=paths, batch_size=batch_size)
+            except TypeError:
+                out = model.transcribe(paths)
     return [normalize_text(hyp_to_text(x)) for x in out]
 
 
